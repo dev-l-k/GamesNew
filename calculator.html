@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Game Hub</title>
+  <style>
+  
+    /* CSS Variables for Theming */
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2c3e50;
+      --accent-color: #ff4757;
+      --light-color: #f4f5f9;
+      --dark-color: #333;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--light-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: margin-left 0.3s;
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+
+    /* Font Awesome Icons (embedded) */
+    .fa {
+      display: inline-block;
+      font-style: normal;
+      font-variant: normal;
+      text-rendering: auto;
+      line-height: 1;
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+    }
+
+    .fa-star:before { content: "\f005"; }
+    .fa-times:before { content: "\f00d"; }
+    .fa-brain:before { content: "\f5dc"; }
+    .fa-puzzle-piece:before { content: "\f12e"; }
+    .fa-palette:before { content: "\f53f"; }
+    .fa-keyboard:before { content: "\f11c"; }
+    .fa-th:before { content: "\f00a"; }
+    .fa-calculator:before { content: "\f1ec"; }
+    .fa-divide:before { content: "\f529"; }
+    .fa-user:before { content: "\f007"; }
+    .fa-arrow-up:before { content: "\f062"; }
+    .fa-moon:before { content: "\f186"; }
+    .fa-sun:before { content: "\f185"; }
+    .fa-share-alt:before { content: "\f1e0"; }
+    .fa-github:before { content: "\f09b"; }
+    .fa-twitter:before { content: "\f099"; }
+    .fa-linkedin:before { content: "\f08c"; }
+
+    /* Header & Footer */
+    header, footer {
+      text-align: center;
+      background: linear-gradient(135deg, var(--secondary-color), #1a252f);
+      color: white;
+      padding: 25px 10px;
+      position: relative;
+    }
+    
+    header {
+      box-shadow: var(--shadow);
+    }
+    
+    p {
+      font-size: 15px;
+    }
+    
+    h1 {
+      padding-left: 55px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 55px;
+      width: 50px;
+      height: 3px;
+      background: var(--primary-color);
+      border-radius: 3px;
+    }
+
+    h4 {
+      text-align: center;
+      color: #555;
+      font-family: 'Courier New', monospace;
+      margin: 10px 0;
+      font-weight: 300;
+    }
+
+    /* Main Container */
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+      padding: 25px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Game Cards */
+    .game-card {
+      display: flex;
+      flex-direction: column;
+      perspective: 1000px;
+    }
+
+    .box {
+      background-color: white;
+      border-radius: 12px;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+      text-align: center;
+      padding: 20px 15px;
+      text-decoration: none;
+      color: var(--dark-color);
+      
+      opacity: 0;
+      transform: translateY(20px);
+      animation: cardEntry 0.6s forwards;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      
+    }
+
+    .box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: var(--primary-color);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    @keyframes cardEntry {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .box:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .box:hover::before {
+      transform: scaleX(1);
+    }
+
+    .box img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      transition: var(--transition);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    
+
+    .box:hover img {
+      transform: scale(1.05);
+    }
+
+    h3 {
+      color: var(--secondary-color);
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    h3::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 2px;
+      background: var(--primary-color);
+      transition: var(--transition);
+    }
+
+    .box:hover h3::after {
+      width: 60px;
+    }
+
+    h5 {
+      color: #666;
+      font-weight: normal;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    /* Card Actions */
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding: 0 10px;
+      width: 100%;
+    }
+
+    /* Favorite Button */
+    .favorite-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #ccc;
+      transition: var(--transition);
+      padding: 5px;
+      position: relative;
+    }
+
+    .favorite-btn::before {
+      content: 'Add to favorites';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      opacity: 0;
+      transition: var(--transition);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .favorite-btn:hover::before {
+      opacity: 1;
+      bottom: 120%;
+    }
+
+    .favorite-btn.active {
+      color: var(--accent-color);
+      transform: scale(1.1);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .favorite-btn:hover {
+      transform: scale(1.2);
+    }
+
+    /* Share Button */
+    .share-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .share-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255,255,255,0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+
+    .share-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    }
+
+    .share-btn:active::after {
+      animation: ripple 0.6s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+
+    /* Favorites Section */
+    .favorites-section {
+      padding: 20px;
+      background: #f8f9fa;
+      border-bottom: 2px solid #e9ecef;
+      position: relative;
+    }
+
+    .favorites-section h2 {
+      text-align: center;
+      color: var(--secondary-color);
+      margin-bottom: 15px;
+      font-size: 1.8rem;
+    }
+
+    .favorites-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    }
+
+    /* Search System */
+    .search-container {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      background: #ecf0f1;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    #search {
+      width: 100%;
+      max-width: 500px;
+      padding: 12px 20px 12px 45px;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: var(--transition);
+      background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%233498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 15px center;
+    }
+
+    #search:focus {
+      outline: none;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+      transform: scale(1.02);
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 100vh;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: -250px;
+      background: linear-gradient(to bottom, var(--primary-color), #2980b9);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      padding-top: 60px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar.active {
+      left: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    .nav-links a {
+      color: white;
+      padding: 12px 15px;
+      margin: 5px 0;
+      border-radius: 5px;
+      transition: var(--transition);
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-links a i {
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-links a:hover {
+      background-color: rgba(255,255,255,0.2);
+      transform: translateX(5px);
+    }
+
+    .nav-footer {
+      padding: 15px;
+      text-align: center;
+      color: white;
+      font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Hamburger Menu */
+    .menu-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      font-weight: bold;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--primary-color);
+      border-radius: 50%;
+      padding: 10px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      
+    }
+
+    .menu-btn:hover {
+      background-color: #2980b9;
+      transform: rotate(0deg);
+    }
+
+    .menu-btn-line {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 3px 0;
+      transition: var(--transition);
+      border-radius: 3px;
+    }
+
+    .menu-btn.active {
+      background-color: var(--accent-color);
+      transform: rotate(180deg);
+    }
+
+    .menu-btn.active .menu-btn-line:nth-child(1) {
+      transform: translateY(10px) rotate(45deg);
+    }
+
+    .menu-btn.active .menu-btn-line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-btn.active .menu-btn-line:nth-child(3) {
+      transform: translateY(-10px) rotate(-45deg);
+    }
+
+    body.nav-active {
+      margin-left: 250px;
+    }
+
+    /* Scroll to Top Button */
+    .scroll-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      opacity: 0;
+      visibility: hidden;
+      z-index: 999;
+    }
+
+    .scroll-top.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .scroll-top:hover {
+      background: var(--secondary-color);
+      transform: translateY(-5px);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 50px;
+      height: 50px;
+      background: var(--secondary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      z-index: 999;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(30deg);
+    }
+
+    /* Game Counter */
+    .game-counter {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--accent-color);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Loading Animation */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Confetti Effect */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0;
+      z-index: 9998;
+      animation: confettiFall 5s linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .box {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    body.dark-mode h3 {
+      color: #bb86fc;
+    }
+
+    body.dark-mode h5 {
+      color: #a0a0a0;
+    }
+
+    body.dark-mode .search-container {
+      background: #1e1e1e;
+    }
+
+    body.dark-mode #search {
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .favorites-section {
+      background: #1a1a1a;
+      border-bottom-color: #333;
+    }
+
+    body.dark-mode .favorites-section h2 {
+      color: #bb86fc;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+        padding: 15px;
+      }
+      
+      .box {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+      
+      body.nav-active {
+        margin-left: 0;
+        overflow-x: hidden;
+      }
+      
+      .navbar {
+        width: 80%;
+        left: -80%;
+      }
+      
+      .navbar.active {
+        left: 0;
+      }
+
+      .scroll-top, .theme-toggle {
+        bottom: 20px;
+        width: 40px;
+        height: 40px;
+      }
+
+      .scroll-top {
+        right: 20px;
+      }
+
+      .theme-toggle {
+        left: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      
+      header, footer {
+        font-size: 20px;
+        padding: 20px 8px;
+      }
+
+      h4 {
+        font-size: 14px;
+        margin: 8px;
+      }
+
+      .box {
+        padding: 15px 10px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      h5 {
+        font-size: 13px;
+      }
+      
+      .menu-btn {
+        top: 15px;
+        left: 15px;
+        width: 50px;
+        height: 50px;
+      }
+
+      .menu-btn-line {
+        width: 30px;
+        height: 4px;
+      }
+
+      .game-counter {
+        top: 15px;
+        right: 15px;
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) and (orientation: portrait) {
+      .card-actions {
+        padding: 0 5px;
+      }
+      
+      .favorite-btn {
+        font-size: 22px;
+        padding: 0;
+        margin-right: auto;
+      }
+      
+      .share-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+        min-width: 70px;
+        margin-left: auto;
+      }
+    }
+    /* Add this to your existing CSS */
+html {
+  scroll-padding-top: 50px; /* This creates space when jumping to anchors */
+}
+
+.search-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ecf0f1;
+  transition: all 0.3s ease;
+}
+
+/* For mobile, reduce the offset */
+@media (max-width: 768px) {
+  html {
+    scroll-padding-top: 40px;
+  }
+}
+  </style>
+</head>
+
+<body>
+  <!-- Loading Screen -->
+  <div class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <!-- Scroll to Top Button -->
+  <div class="scroll-top" title="Scroll to top">
+    <i class="fa">↑</i>
+  </div>
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle" title="Toggle dark mode">
+    <i class="fa">🌙</i>
+  </div>
+
+  <!-- Hamburger Menu Button -->
+  <div class="menu-btn">
+    <div class="menu-btn-line"></div>
+    <div class="menu-btn-line"></div>
+    <div class="menu-btn-line"></div>
+  </div>
+
+  <!-- Vertical Navbar -->
+  <nav class="navbar">
+    <div class="nav-links">
+      <a href="#favorites-section"><i class="fa">★</i> Favorites</a>
+      <a href="#ttt"><i class="fa">×</i> Tic Tac Toe</a>
+      <a href="#memory"><i class="fa">🧠</i> Memory Game</a>
+      <a href="#slide"><i class="fa">🧩</i> Sliding Puzzle</a>
+      <a href="#colorpick"><i class="fa">🎨</i> Color Picker</a>
+      <a href="#speed_type"><i class="fa">⌨️</i> Typing Speed</a>
+      <a href="#sudoku"><i class="fa">🔢</i> Sudoku</a>
+      <a href="#calculator"><i class="fa">🧮</i> Calculator</a>
+      <a href="#division"><i class="fa">➗</i> Division Calc</a>
+      <a href="#hangman"><i class="fa">🧑</i> Hangman</a>
+    </div>
+    
+  </nav>
+
+  <header>
+    <h1>My Game Storing Webpage</h1>
+    
+  </header>
+  
+  <h4>This webpage is a storage of games and webpages made by dev-l-k.</h4>
+  <h4>These games are purely made with HTML, CSS, and JS.</h4>
+
+  <!-- Favorites Section -->
+  <div class="favorites-section" id="favorites-section">
+    <h2><i class="fa">★</i> Your Favorite Games</h2>
+    <div class="container" id="favorites-container"></div>
+  </div>
+
+  <!-- Search System -->
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Search games..." aria-label="Search games">
+  </div>
+
+  <div class="container" id="games-container">
+    <div class="game-card">
+      <a href="ttt.html" class="box" id="ttt" data-title="unbeatable tic tac toe">
+        <h3>UNBEATABLE TIC TAC TOE</h3>
+        <img src="image/ttt.jpg" alt="Tic Tac Toe Game">
+        <h5>Click inside this box to open the Tic Tac Toe Game.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('UNBEATABLE TIC TAC TOE', event)">
+          <i class="fa">↗️</i> <span>Share</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <a href="memory.html" class="box" id="memory" data-title="memory card flip game">
+        <h3>Memory Card Flip Game</h3>
+        <img src="image/memory.jpg" alt="Memory Card Game">
+        <h5>Click inside this box to open the Memory Game.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('Memory Card Flip Game', event)">
+          <i class="fa">↗️</i> <span>Share</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <a href="slide.html" class="box" id="slide" data-title="sliding puzzle game">
+        <h3>Sliding Puzzle Game</h3>
+        <img src="image/slide.jpg" alt="Sliding Puzzle">
+        <h5>Click inside this box to open the Sliding Pu
