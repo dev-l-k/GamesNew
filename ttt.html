@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Unbeatable Tic Tac Toe</title>
+  <style>
+    :root {
+      --x-color: #00ffff;
+      --o-color: #ff00ff;
+      --background: #1a1a2e;
+      --cell-bg: #16213e;
+      --highlight: #f8aa4b;
+      --text: #e6e6e6;
+      --button-text: #000;
+    }
+
+    [data-theme="light"] {
+      --x-color: #0066cc;
+      --o-color: #cc0066;
+      --background: #f0f0f5;
+      --cell-bg: #ffffff;
+      --highlight: #ff6b35;
+      --text: #333333;
+      --button-text: #ffffff;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(26, 26, 46, 0.8);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+
+    [data-theme="light"] .container {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      color: var(--highlight);
+      font-size: 2.5rem;
+      text-align: center;
+    }
+
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      background: rgba(0, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      transition: background 0.3s ease;
+    }
+
+    [data-theme="light"] .game-info {
+      background: rgba(0, 102, 204, 0.1);
+    }
+
+    .player-info {
+      text-align: center;
+      flex: 1;
+    }
+
+    .player-symbol {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .player-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .x-info {
+      color: var(--x-color);
+    }
+
+    .o-info {
+      color: var(--o-color);
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      aspect-ratio: 1/1;
+      margin: 20px 0;
+    }
+
+    .cell {
+      background: var(--cell-bg);
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      aspect-ratio: 1/1;
+      font-size: 4rem;
+      font-weight: bold;
+    }
+
+    [data-theme="light"] .cell {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .cell.x {
+      color: var(--x-color);
+    }
+
+    .cell.o {
+      color: var(--o-color);
+    }
+
+    .winning-cell {
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); box-shadow: 0 0 10px currentColor; }
+      to { transform: scale(1.03); box-shadow: 0 0 20px currentColor; }
+    }
+
+    #status {
+      margin: 20px 0;
+      font-size: 1.5rem;
+      text-align: center;
+      min-height: 40px;
+      color: var(--highlight);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .restart-btn {
+      background: var(--x-color);
+      color: var(--button-text);
+    }
+
+    .restart-btn:hover {
+      background: #00d8d8;
+      transform: translateY(-2px);
+    }
+
+    [data-theme="light"] .restart-btn {
+      background: var(--x-color);
+    }
+
+    .mode-btn {
+      background: var(--o-color);
+      color: var(--button-text);
+    }
+
+    .mode-btn:hover {
+      background: #ff33ff;
+      transform: translateY(-2px);
+    }
+
+    [data-theme="light"] .mode-btn {
+      background: var(--o-color);
+    }
+
+    .theme-btn {
+      background: royalblue;
+      color: var(--button-text);
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 1.5rem;
+    }
+
+    .theme-btn:hover {
+      background: royalblue;
+      transform: translateY(-2px);
+    }
+
+    .home-btn {
+      background-color: var(--x-color);
+      padding: 8px 15px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 20px;
+      border-radius: 50px;
+      text-align: center;
+      color: var(--button-text);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .home-btn {
+      background-color: var(--x-color);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .cell {
+        font-size: 3rem;
+      }
+      
+      .game-info {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      button {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="home-btn">⌂</a>
+
+  <div class="container">
+    <h1>Unbeatable Tic Tac Toe</h1>
+    
+    <div class="game-info">
+      <div class="player-info x-info">
+        <div class="player-symbol" id="playerX">X (You)</div>
+        <div class="player-label">Player</div>
+      </div>
+      <div class="player-info o-info">
+        <div class="player-symbol" id="playerO">O (AI)</div>
+        <div class="player-label">Computer</div>
+      </div>
+    </div>
+    
+    <div id="game"></div>
+    
+    <div id="status">Your turn!</div>
+    
+    <div class="buttons">
+      <button class="restart-btn" onclick="startNewGame()">↻ Restart</button>
+      <button class="mode-btn" id="difficultyBtn" onclick="tryToggleDifficulty()">Difficulty: <span id="difficulty">Hard</span></button>
+    </div>
+  </div>
+
+  <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+
+  <script>
+    const gameEl = document.getElementById('game');
+    const statusEl = document.getElementById('status');
+    const playerXEl = document.getElementById('playerX');
+    const playerOEl = document.getElementById('playerO');
+    const difficultyEl = document.getElementById('difficulty');
+    const difficultyBtn = document.getElementById('difficultyBtn');
+
+    let board = Array(9).fill(null);
+    let human = 'X';
+    let ai = 'O';
+    let gameOver = false;
+    let isHumanTurn = true;
+    let currentStarter = 'human';
+    let difficulty = 'hard'; // 'easy', 'medium', 'hard'
+    let canChangeDifficulty = true;
+
+    const winCombos = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    // Check for saved theme preference or use preferred color scheme
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme) {
+      document.body.setAttribute('data-theme', savedTheme);
+    } else {
+      document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+
+    // Set initial theme icon
+    const themeBtn = document.querySelector('.theme-btn');
+    if (document.body.getAttribute('data-theme') === 'light') {
+      themeBtn.textContent = '☀️';
+    } else {
+      themeBtn.textContent = '🌙';
+    }
+
+    function getRandomColor() {
+      const hue = Math.floor(Math.random() * 360);
+      return `hsl(${hue}, 100%, 60%)`;
+    }
+
+    function renderBoard() {
+      gameEl.innerHTML = '';
+      board.forEach((cell, i) => {
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        div.dataset.index = i;
+        if (cell === 'X') {
+          div.classList.add('x');
+          div.textContent = 'X';
+        }
+        if (cell === 'O') {
+          div.classList.add('o');
+          div.textContent = 'O';
+        }
+        if (!cell && isHumanTurn && !gameOver) {
+          div.addEventListener('click', playerMove, { once: true });
+        }
+        gameEl.appendChild(div);
+      });
+    }
+
+    function playerMove(e) {
+      if (gameOver || !isHumanTurn) return;
+
+      const idx = e.target.dataset.index;
+      if (!board[idx]) {
+        board[idx] = human;
+        isHumanTurn = false;
+        canChangeDifficulty = false;
+        renderBoard();
+
+        if (checkWinner(board, human)) {
+          endGame('You win!');
+        } else if (isDraw(board)) {
+          endGame('Draw!');
+        } else {
+          statusEl.textContent = 'AI is thinking...';
+          setTimeout(computerMove, 500 + Math.random() * 1000);
+        }
+      }
+    }
+
+    function computerMove() {
+      if (gameOver) return;
+
+      let bestMove;
+      
+      if (difficulty === 'easy') {
+        // Easy mode - random moves
+        const availSpots = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+        bestMove = availSpots[Math.floor(Math.random() * availSpots.length)];
+      } else if (difficulty === 'medium') {
+        // Medium mode - sometimes makes mistakes
+        if (Math.random() < 0.7) {
+          bestMove = minimax(board, ai).index;
+        } else {
+          const availSpots = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+          bestMove = availSpots[Math.floor(Math.random() * availSpots.length)];
+        }
+      } else {
+        // Hard mode - perfect play
+        bestMove = minimax(board, ai).index;
+      }
+      
+      board[bestMove] = ai;
+      renderBoard();
+
+      if (checkWinner(board, ai)) {
+        endGame('AI wins!');
+      } else if (isDraw(board)) {
+        endGame('Draw!');
+      } else {
+        isHumanTurn = true;
+        statusEl.textContent = 'Your turn!';
+        renderBoard();
+      }
+    }
+
+    function checkWinner(board, player) {
+      const winningCombo = winCombos.find(combo =>
+        combo.every(index => board[index] === player)
+      );
+      
+      if (winningCombo) {
+        winningCombo.forEach(index => {
+          gameEl.children[index].classList.add('winning-cell');
+        });
+        return true;
+      }
+      return false;
+    }
+
+    function isDraw(board) {
+      return board.every(cell => cell);
+    }
+
+    function endGame(msg) {
+      statusEl.textContent = msg;
+      gameOver = true;
+      canChangeDifficulty = true;
+      setTimeout(startNewGame, 3000);
+    }
+
+    function startNewGame() {
+      board = Array(9).fill(null);
+      gameOver = false;
+      canChangeDifficulty = true;
+      
+      // Alternate who starts
+      if (currentStarter === 'human') {
+        currentStarter = 'ai';
+        human = 'O';
+        ai = 'X';
+        isHumanTurn = false;
+        statusEl.textContent = 'AI starts!';
+      } else {
+        currentStarter = 'human';
+        human = 'X';
+        ai = 'O';
+        isHumanTurn = true;
+        statusEl.textContent = 'Your turn!';
+      }
+      
+      // Update player displays
+      playerXEl.textContent = human === 'X' ? 'X (You)' : 'X (AI)';
+      playerOEl.textContent = ai === 'O' ? 'O (AI)' : 'O (You)';
+      
+      // Randomize colors
+      document.documentElement.style.setProperty('--x-color', getRandomColor());
+      document.documentElement.style.setProperty('--o-color', getRandomColor());
+      
+      renderBoard();
+      
+      if (currentStarter === 'ai') {
+        setTimeout(computerMove, 1000);
+      }
+    }
+
+    function minimax(newBoard, player) {
+      const availSpots = newBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+
+      if (checkWinner(newBoard, human)) return { score: -10 };
+      if (checkWinner(newBoard, ai)) return { score: 10 };
+      if (availSpots.length === 0) return { score: 0 };
+
+      const moves = [];
+
+      for (let i = 0; i < availSpots.length; i++) {
+        const move = {};
+        move.index = availSpots[i];
+        newBoard[availSpots[i]] = player;
+
+        const result = minimax(newBoard, player === ai ? human : ai);
+        move.score = result.score;
+
+        newBoard[availSpots[i]] = null;
+        moves.push(move);
+      }
+
+      let bestMove;
+      if (player === ai) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score > bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score < bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      }
+      return moves[bestMove];
+    }
+
+    function tryToggleDifficulty() {
+      if (!canChangeDifficulty) {
+        statusEl.textContent = 'Change difficulty between games only';
+        setTimeout(() => {
+          if (!gameOver) {
+            statusEl.textContent = isHumanTurn ? 'Your turn!' : 'AI is thinking...';
+          }
+        }, 1500);
+        return;
+      }
+      toggleDifficulty();
+    }
+
+    function toggleDifficulty() {
+      if (difficulty === 'easy') {
+        difficulty = 'medium';
+        difficultyEl.textContent = 'Medium';
+      } else if (difficulty === 'medium') {
+        difficulty = 'hard';
+        difficultyEl.textContent = 'Hard';
+      } else {
+        difficulty = 'easy';
+        difficultyEl.textContent = 'Easy';
+      }
+      
+      statusEl.textContent = `Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
+      setTimeout(() => {
+        if (!gameOver) {
+          statusEl.textContent = isHumanTurn ? 'Your turn!' : 'AI is thinking...';
+        }
+      }, 1500);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Update theme icon
+      if (newTheme === 'light') {
+        themeBtn.textContent = '☀️';
+      } else {
+        themeBtn.textContent = '🌙';
+      }
+    }
+
+    // Start first game
+    startNewGame();
+  </script>
+</body>
+</html>
