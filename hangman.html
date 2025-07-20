@@ -1,1 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Challenge</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            text-align: center;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .game-area {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+            }
+        }
+
+        .hangman-drawing {
+            flex: 1;
+            max-width: 300px;
+            position: relative;
+        }
+
+        canvas {
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            max-width: 100%;
+        }
+
+        .game-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .word-display {
+            font-size: 2rem;
+            letter-spacing: 10px;
+            margin: 20px 0;
+            min-height: 50px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        .letter-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .letter-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .letter-btn:disabled {
+            background: #ddd;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .letter-btn.correct {
+            background: var(--success);
+        }
+
+        .letter-btn.incorrect {
+            background: var(--danger);
+        }
+
+        .game-status {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .win {
+            color: var(--success);
+            animation: celebrate 0.5s ease;
+        }
+
+        .lose {
+            color: var(--danger);
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .restart-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+            margin-top: 10px;
+        }
+
+        .restart-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .category-selector {
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #eee;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+            color: #f5f6fa;
+        }
+
+        body.dark-mode .game-container {
+            background: #2d3436;
+        }
+
+        body.dark-mode select {
+            background: #3d4548;
+            border-color: #3d4548;
+            color: white;
+        }
+
+        body.dark-mode canvas {
+            background: #3d4548;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: fall 3s linear forwards;
+            z-index: 100;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .word-display {
+                font-size: 1.5rem;
+                letter-spacing: 5px;
+            }
+            
+            .letter-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle">🌙</button>
+    
+    <div class="game-container">
+        <h1>🎨 Hangman Challenge</h1>
+        
+        <div class="category-selector">
+            <select id="category-select">
+                <option value="countries">Countries</option>
+                <option value="animals">Animals</option>
+                <option value="fruits">Fruits</option>
+                <option value="movies">Movies</option>
+            </select>
+        </div>
+        
+        <div class="game-area">
+            <div class="hangman-drawing">
+                <canvas id="hangmanCanvas" width="250" height="300"></canvas>
+            </div>
+            
+            <div class="game-info">
+                <div class="word-display" id="wordDisplay">Loading word...</div>
+                
+                <div class="game-status" id="gameStatus"></div>
+                
+                <div class="keyboard" id="keyboard"></div>
+                
+                <button class="restart-btn" id="restartBtn">
+                    🔁 New Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game elements
+            const canvas = document.getElementById('hangmanCanvas');
+            const ctx = canvas.getContext('2d');
+            const wordDisplay = document.getElementById('wordDisplay');
+            const gameStatus = document.getElementById('gameStatus');
+            const keyboard = document.getElementById('keyboard');
+            const restartBtn = document.getElementById('restartBtn');
+            const categorySelect = document.getElementById('category-select');
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Word categories
+            const wordCategories = {
+                countries: ["BRAZIL", "CANADA", "JAPAN", "GERMANY", "AUSTRALIA", "ITALY", "EGYPT", "INDIA"],
+                animals: ["ELEPHANT", "GIRAFFE", "KANGAROO", "DOLPHIN", "CHEETAH", "PANDA", "ZEBRA", "OCTOPUS"],
+                fruits: ["BANANA", "WATERMELON", "PINEAPPLE", "STRAWBERRY", "BLUEBERRY", "MANGO", "KIWI", "POMEGRANATE"],
+                movies: ["INCEPTION", "TITANIC", "AVATAR", "JURASSIC", "MATRIX", "FROZEN", "GLADIATOR", "PARASITE"]
+            };
+            
+            // Game state
+            let selectedWord = "";
+            let displayedWord = [];
+            let incorrectGuesses = 0;
+            let maxGuesses = 6;
+            let guessedLetters = [];
+            let gameOver = false;
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                themeToggle.textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('darkMode', isDark);
+                drawHangman(); // Redraw canvas with correct colors
+            });
+            
+            // Check for saved theme preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            }
+            
+            // Initialize game
+            function initGame() {
+                // Clear previous state
+                incorrectGuesses = 0;
+                guessedLetters = [];
+                gameOver = false;
+                gameStatus.textContent = "";
+                gameStatus.className = "game-status";
+                
+                // Select random word from category
+                const category = categorySelect.value;
+                const words = wordCategories[category];
+                selectedWord = words[Math.floor(Math.random() * words.length)];
+                
+                // Initialize displayed word
+                displayedWord = Array(selectedWord.length).fill("_");
+                wordDisplay.textContent = displayedWord.join(" ");
+                
+                // Clear and redraw canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawHangman();
+                
+                // Create keyboard
+                createKeyboard();
+            }
+            
+            // Create keyboard buttons
+            function createKeyboard() {
+                keyboard.innerHTML = '';
+                for (let i = 65; i <= 90; i++) {
+                    const letter = String.fromCharCode(i);
+                    const button = document.createElement('button');
+                    button.className = 'letter-btn';
+                    button.textContent = letter;
+                    button.dataset.letter = letter;
+                    button.addEventListener('click', () => handleGuess(letter, button));
+                    keyboard.appendChild(button);
+                }
+            }
+            
+            // Handle letter guess
+            function handleGuess(letter, button) {
+                if (gameOver || guessedLetters.includes(letter)) return;
+                
+                button.disabled = true;
+                guessedLetters.push(letter);
+                
+                if (selectedWord.includes(letter)) {
+                    // Correct guess
+                    button.classList.add('correct');
+                    updateDisplayedWord(letter);
+                    
+                    // Check if won
+                    if (!displayedWord.includes("_")) {
+                        gameWon();
+                    }
+                } else {
+                    // Incorrect guess
+                    button.classList.add('incorrect');
+                    incorrectGuesses++;
+                    drawHangman();
+                    
+                    // Check if lost
+                    if (incorrectGuesses >= maxGuesses) {
+                        gameLost();
+                    }
+                }
+            }
+            
+            // Update displayed word with correct guesses
+            function updateDisplayedWord(letter) {
+                for (let i = 0; i < selectedWord.length; i++) {
+                    if (selectedWord[i] === letter) {
+                        displayedWord[i] = letter;
+                    }
+                }
+                wordDisplay.textContent = displayedWord.join(" ");
+            }
+            
+            // Game won
+            function gameWon() {
+                gameOver = true;
+                gameStatus.textContent = "🎉 You Won!";
+                gameStatus.classList.add('win');
+                createConfetti();
+            }
+            
+            // Game lost
+            function gameLost() {
+                gameOver = true;
+                gameStatus.innerHTML = `💀 Game Over!<br>The word was: <strong>${selectedWord}</strong>`;
+                gameStatus.classList.add('lose');
+                
+                // Reveal the word
+                displayedWord = selectedWord.split('');
+                wordDisplay.textContent = displayedWord.join(" ");
+            }
+            
+            // Draw hangman based on incorrect guesses
+            function drawHangman() {
+  // Set drawing style
+  ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#f5f6fa' : '#2d3436';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw gallows structure
+  ctx.beginPath();
+  // Base (bottom horizontal)
+  ctx.moveTo(50, 280);
+  ctx.lineTo(200, 280);
+  // Vertical pole
+  ctx.moveTo(125, 280);
+  ctx.lineTo(125, 50);
+  // Top beam
+  ctx.lineTo(200, 50);
+  // Rope
+  ctx.lineTo(200, 70);
+  ctx.stroke();
+  
+  // Draw hangman parts based on incorrect guesses
+  if (incorrectGuesses >= 1) {
+    // Head (simple circle)
+    ctx.beginPath();
+    ctx.arc(200, 90, 20, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  
+  if (incorrectGuesses >= 2) {
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(200, 110);
+    ctx.lineTo(200, 180);
+    ctx.stroke();
+  }
+  
+  if (incorrectGuesses >= 3) {
+    // Left arm
+    ctx.beginPath();
+    ctx.moveTo(200, 130);
+    ctx.lineTo(170, 150);
+    ctx.stroke();
+  }
+  
+  if (incorrectGuesses >= 4) {
+    // Right arm
+    ctx.beginPath();
+    ctx.moveTo(200, 130);
+    ctx.lineTo(230, 150);
+    ctx.stroke();
+  }
+  
+  if (incorrectGuesses >= 5) {
+    // Left leg
+    ctx.beginPath();
+    ctx.moveTo(200, 180);
+    ctx.lineTo(170, 220);
+    ctx.stroke();
+  }
+  
+  if (incorrectGuesses >= 6) {
+    // Right leg
+    ctx.beginPath();
+    ctx.moveTo(200, 180);
+    ctx.lineTo(230, 220);
+    ctx.stroke();
+  }
+}
+            
+            // Create celebration confetti
+            function createConfetti() {
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = `${Math.random() * 100}vw`;
+                    confetti.style.backgroundColor = getRandomColor();
+                    confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                    document.body.appendChild(confetti);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }
+            }
+            
+            function getRandomColor() {
+                const colors = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e', '#0984e3'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            // Event listeners
+            restartBtn.addEventListener('click', initGame);
+            categorySelect.addEventListener('change', initGame);
+            
+            // Start first game
+            initGame();
+        });
+    </script>
+</body>
+</html>
