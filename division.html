@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Division Calculator</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #ff7675;
+            --warning: #fdcb6e;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .calculator-container {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .calculator-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .calculator-body {
+            padding: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .results.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .error {
+            color: var(--danger);
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+            color: #f5f6fa;
+        }
+
+        body.dark-mode .calculator-container,
+        body.dark-mode .result-card {
+            background: #2d3436;
+            border-color: #3d4548;
+        }
+
+        body.dark-mode input {
+            background: #3d4548;
+            border-color: #3d4548;
+            color: white;
+        }
+
+        body.dark-mode label {
+            color: #ddd;
+        }
+
+        @media (max-width: 500px) {
+            .calculator-container {
+                max-width: 100%;
+            }
+            
+            .calculator-body {
+                padding: 20px;
+            }
+            
+            .result-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle">🌙</button>
+    
+    <div class="calculator-container">
+        <div class="calculator-header">
+            <h1>Advanced Division Calculator</h1>
+        </div>
+        
+        <div class="calculator-body">
+            <div class="input-group">
+                <label for="dividend">Dividend (Number to be divided)</label>
+                <input type="number" id="dividend" placeholder="Enter a number...">
+                <div id="dividend-error" class="error">Please enter a valid number</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="divisor">Divisor (Number to divide by)</label>
+                <input type="number" id="divisor" placeholder="Enter a number...">
+                <div id="divisor-error" class="error">Please enter a valid number (cannot be zero)</div>
+            </div>
+            
+            <button id="calculate-btn" class="calculate-btn">Calculate Division</button>
+            
+            <div id="results" class="results">
+                <div class="result-card">
+                    <div class="result-title">
+                        <span class="icon">→</span>
+                        <span>Decimal Quotient</span>
+                    </div>
+                    <div id="decimal-result" class="result-value">0</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">
+                        <span class="icon">→</span>
+                        <span>Remainder</span>
+                    </div>
+                    <div id="remainder-result" class="result-value">0</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">
+                        <span class="icon">→</span>
+                        <span>Remainder-Based Quotient</span>
+                    </div>
+                    <div id="mixed-result" class="result-value">0 r0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dividendInput = document.getElementById('dividend');
+            const divisorInput = document.getElementById('divisor');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultsContainer = document.getElementById('results');
+            const decimalResult = document.getElementById('decimal-result');
+            const remainderResult = document.getElementById('remainder-result');
+            const mixedResult = document.getElementById('mixed-result');
+            const dividendError = document.getElementById('dividend-error');
+            const divisorError = document.getElementById('divisor-error');
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                themeToggle.textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('darkMode', isDark);
+            });
+            
+            // Check for saved theme preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            }
+            
+            // Calculate on button click
+            calculateBtn.addEventListener('click', calculateDivision);
+            
+            // Also calculate on Enter key press
+            dividendInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') calculateDivision(); 
+            });
+            
+            divisorInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') calculateDivision();
+            });
+            
+            function calculateDivision() {
+                // Reset errors
+                dividendError.style.display = 'none';
+                divisorError.style.display = 'none';
+                
+                // Get values
+                const dividend = parseFloat(dividendInput.value);
+                const divisor = parseFloat(divisorInput.value);
+                
+                // Validate inputs
+                let isValid = true;
+                
+                if (isNaN(dividend)) {
+                    dividendError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (isNaN(divisor) || divisor === 0) {
+                    divisorError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    resultsContainer.classList.remove('show');
+                    return;
+                }
+                
+                // Calculate results
+                const quotient = dividend / divisor;
+                const remainder = dividend % divisor;
+                
+                // Round to maximum 6 decimal places for display
+                const roundedQuotient = Math.round(quotient * 1000000) / 1000000;
+                
+                // Display results
+                decimalResult.textContent = roundedQuotient;
+                remainderResult.textContent = remainder;
+                mixedResult.textContent = `${Math.floor(quotient)} r${remainder}`;
+                
+                // Show results with animation
+                resultsContainer.classList.add('show');
+                
+                // Add celebration effect for whole number results
+                if (remainder === 0) {
+                    celebrate();
+                }
+            }
+            
+            function celebrate() {
+                // Create confetti elements
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = getRandomColor();
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.left = `${Math.random() * 100}vw`;
+                    confetti.style.top = '-10px';
+                    confetti.style.zIndex = '100';
+                    confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                    document.body.appendChild(confetti);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 5000);
+                }
+                
+                // Add CSS for animation
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    @keyframes fall {
+                        to { transform: translateY(100vh) rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            function getRandomColor() {
+                const colors = ['#6c5ce7', '#00b894', '#fd79a8', '#fdcb6e', '#0984e3'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+        });
+    </script>
+</body>
+</html>
