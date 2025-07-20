@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Perception Challenge</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 10px;
+        }
+        
+        .score, .level, .high-score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .score-value, .level-value, .high-score-value {
+            color: #e74c3c;
+            font-weight: 800;
+        }
+        
+        .high-score-value {
+            color: #27ae60;
+        }
+        
+        .grid-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .color-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            gap: 1px;
+            background-color: #ecf0f1;
+        }
+        
+        .grid-cell {
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-cell:hover {
+            transform: scale(0.95);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .grid-cell::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: inherit;
+            opacity: 0.9;
+        }
+        
+        .start-screen {
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #2ecc71;
+            color: white;
+            transition: all 0.3s;
+            margin-top: 15px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-over {
+            display: none;
+            font-size: 22px;
+            color: #e74c3c;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fdedec;
+            border-radius: 10px;
+        }
+        
+        .final-score {
+            font-weight: 800;
+            font-size: 24px;
+            color: #c0392b;
+        }
+        
+        .new-high-score {
+            display: none;
+            color: #27ae60;
+            font-weight: bold;
+            margin: 10px 0;
+            animation: pulse 1s infinite;
+        }
+        
+        .correct-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            animation: fadeInOut 1s ease-in-out;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .difficulty-indicator {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Color Perception Challenge</h1>
+        <p class="subtitle">Find and click on the slightly different colored square</p>
+        
+        <div class="game-info">
+            <div class="score">Score: <span class="score-value" id="score">0</span></div>
+            <div class="level">Level: <span class="level-value" id="level">1</span></div>
+            <div class="high-score">High Score: <span class="high-score-value" id="high-score">0</span></div>
+        </div>
+        
+        <div class="grid-container">
+            <div class="color-grid" id="color-grid"></div>
+            <div class="correct-feedback" id="correct-feedback">+10</div>
+        </div>
+        
+        <div class="difficulty-indicator">
+            Current difficulty: <span class="highlight" id="difficulty">Easy</span>
+        </div>
+        
+        <div class="start-screen" id="start-screen">
+            <button id="start-btn">Start Game</button>
+        </div>
+        
+        <div class="game-over" id="game-over">
+            Game Over! Your final score: <span class="final-score" id="final-score">0</span>
+            <div class="new-high-score" id="new-high-score">New High Score! 🎉</div>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let level = 1;
+        let rows = 2;
+        let cols = 2;
+        let baseColor;
+        let differentColor;
+        let differentPosition;
+        let gameActive = false;
+        let colorDifference = 30;
+        let highScore = 0;
+        
+        // DOM elements
+        const colorGrid = document.getElementById('color-grid');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverDisplay = document.getElementById('game-over');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const highScoreDisplay = document.getElementById('high-score');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const correctFeedback = document.getElementById('correct-feedback');
+        const difficultyDisplay = document.getElementById('difficulty');
+        const newHighScoreDisplay = document.getElementById('new-high-score');
+        
+        // Initialize high score from localStorage
+        function loadHighScore() {
+            const savedHighScore = localStorage.getItem('colorPerceptionHighScore');
+            if (savedHighScore) {
+                highScore = parseInt(savedHighScore);
+                highScoreDisplay.textContent = highScore;
+            }
+        }
+        
+        // Save high score to localStorage
+        function saveHighScore() {
+            localStorage.setItem('colorPerceptionHighScore', highScore.toString());
+        }
+        
+        // Check and update high score
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                highScoreDisplay.textContent = highScore;
+                saveHighScore();
+                return true;
+            }
+            return false;
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+        
+        // Load high score when page loads
+        loadHighScore();
+        
+        // Game functions
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameOverDisplay.style.display = 'none';
+            newHighScoreDisplay.style.display = 'none';
+            gameActive = true;
+            score = 0;
+            level = 1;
+            rows = 2;
+            cols = 2;
+            colorDifference = 30;
+            updateDisplays();
+            createGrid();
+        }
+        
+        function restartGame() {
+            gameOverDisplay.style.display = 'none';
+            newHighScoreDisplay.style.display = 'none';
+            gameActive = true;
+            score = 0;
+            level = 1;
+            rows = 2;
+            cols = 2;
+            colorDifference = 30;
+            updateDisplays();
+            createGrid();
+        }
+        
+        function updateDisplays() {
+            scoreDisplay.textContent = score;
+            levelDisplay.textContent = level;
+            
+            // Update difficulty display
+            if (level < 5) {
+                difficultyDisplay.textContent = "Easy";
+            } else if (level < 10) {
+                difficultyDisplay.textContent = "Medium";
+            } else {
+                difficultyDisplay.textContent = "Hard";
+            }
+        }
+        
+        function createGrid() {
+            // Clear previous grid
+            colorGrid.innerHTML = '';
+            
+            // Set grid template
+            colorGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            colorGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+            
+            // Generate random base color
+            baseColor = getRandomColor();
+            
+            // Generate slightly different color with decreasing difference
+            colorDifference = Math.max(5, 30 - Math.floor(level / 2)); // Minimum difference of 5
+            differentColor = getSimilarColor(baseColor, colorDifference);
+            
+            // Choose random position for different color
+            differentPosition = Math.floor(Math.random() * (rows * cols));
+            
+            // Create grid cells
+            for (let i = 0; i < rows * cols; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                
+                // Set cell color
+                if (i === differentPosition) {
+                    cell.style.backgroundColor = differentColor;
+                    cell.dataset.correct = 'true';
+                } else {
+                    cell.style.backgroundColor = baseColor;
+                }
+                
+                // Add click event
+                cell.addEventListener('click', handleCellClick);
+                
+                colorGrid.appendChild(cell);
+            }
+        }
+        
+        function handleCellClick(e) {
+            if (!gameActive) return;
+            
+            if (e.target.dataset.correct === 'true') {
+                // Correct answer
+                const points = level * 10;
+                score += points;
+                
+                // Show feedback animation
+                correctFeedback.textContent = `+${points}`;
+                correctFeedback.style.animation = 'none';
+                void correctFeedback.offsetWidth; // Trigger reflow
+                correctFeedback.style.animation = 'fadeInOut 1s ease-in-out';
+                
+                // Increase level and grid size
+                level++;
+                
+                if (level % 3 === 0 && rows < 6) {
+                    // Every 3 levels, increase grid size (max 6x6)
+                    rows++;
+                    cols++;
+                }
+                
+                updateDisplays();
+                createGrid();
+            } else {
+                // Wrong answer - game over
+                gameOver();
+            }
+        }
+        
+        function gameOver() {
+            gameActive = false;
+            finalScoreDisplay.textContent = score;
+            
+            // Check for new high score
+            const isNewHighScore = updateHighScore();
+            if (isNewHighScore) {
+                newHighScoreDisplay.style.display = 'block';
+            }
+            
+            gameOverDisplay.style.display = 'block';
+            
+            // Pulse animation for game over
+            gameOverDisplay.style.animation = 'none';
+            void gameOverDisplay.offsetWidth;
+            gameOverDisplay.style.animation = 'pulse 0.5s ease-in-out 2';
+        }
+        
+        // Helper functions
+        function getRandomColor() {
+            const r = Math.floor(Math.random() * 206) + 25; // Avoid very dark/light colors
+            const g = Math.floor(Math.random() * 206) + 25;
+            const b = Math.floor(Math.random() * 206) + 25;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        function getSimilarColor(baseColor, maxDifference) {
+            // Parse base color
+            const matches = baseColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            const r = parseInt(matches[1]);
+            const g = parseInt(matches[2]);
+            const b = parseInt(matches[3]);
+            
+            // Calculate random differences (ensure minimum difference)
+            let diffR, diffG, diffB;
+            do {
+                diffR = Math.floor(Math.random() * maxDifference * 2) - maxDifference;
+                diffG = Math.floor(Math.random() * maxDifference * 2) - maxDifference;
+                diffB = Math.floor(Math.random() * maxDifference * 2) - maxDifference;
+            } while (Math.abs(diffR) + Math.abs(diffG) + Math.abs(diffB) < maxDifference / 2);
+            
+            // Apply differences with bounds checking
+            const newR = Math.min(230, Math.max(25, r + diffR));
+            const newG = Math.min(230, Math.max(25, g + diffG));
+            const newB = Math.min(230, Math.max(25, b + diffB));
+            
+            return `rgb(${newR}, ${newG}, ${newB})`;
+        }
+    </script>
+</body>
+</html>
