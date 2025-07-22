@@ -1099,7 +1099,7 @@ function shareGame(event) {
   const gameName = gameLink.querySelector('h3').textContent;
   
   // Construct the full URL (current domain + game path)
-  const fullUrl = window.location.origin + '/' + gameUrl;
+  const fullUrl = window.location.origin + '/GamesNew/' + gameUrl;
   
   if (navigator.share) {
     navigator.share({
