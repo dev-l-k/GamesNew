@@ -911,7 +911,7 @@ html {
     </div>
 
     <div class="game-card">
-      <a href="speed-type.html" class="box" id="speed_type" data-title="typing speed calculator">
+      <a href="speed_type.html" class="box" id="speed_type" data-title="typing speed calculator">
         <h3>Typing Speed Calculator</h3>
         <img src="image/type.jpg" alt="Typing Speed App">
         <h5>Click inside this box to open the Typing Speed Calculator.</h5>
@@ -1002,281 +1002,271 @@ html {
 
   <script>
     // Loading screen
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.querySelector('.loader').classList.add('hidden');
-      }, 1000);
-    });
+    // Loading screen
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.querySelector('.loader').classList.add('hidden');
+  }, 1000);
+});
 
-    // Navbar toggle
-    const menuBtn = document.querySelector('.menu-btn');
-    const navbar = document.querySelector('.navbar');
-    const body = document.body;
-    const navLinks = document.querySelectorAll('.nav-links a');
-    const searchContainer = document.querySelector('.search-container');
+// Navbar toggle
+const menuBtn = document.querySelector('.menu-btn');
+const navbar = document.querySelector('.navbar');
+const body = document.body;
+const navLinks = document.querySelectorAll('.nav-links a');
+const searchContainer = document.querySelector('.search-container');
+
+// Smooth scrolling for nav links with offset
+navLinks.forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const targetId = this.getAttribute('href');
+    if (targetId === '#') return;
     
-    // Smooth scrolling for nav links with offset
-    navLinks.forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-          // Close mobile menu if open
-          if (window.innerWidth <= 768) {
-            menuBtn.classList.remove('active');
-            navbar.classList.remove('active');
-            body.classList.remove('nav-active');
-          }
-          
-          // Calculate offset (search bar height + extra padding)
-          const offset = searchContainer.offsetHeight + 20;
-          const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
-          
-          window.scrollTo({
-            top: targetPosition,
-            behavior: 'smooth'
-          });
-        }
-      });
-    });
-
-    menuBtn.addEventListener('click', () => {
-      menuBtn.classList.toggle('active');
-      navbar.classList.toggle('active');
-      body.classList.toggle('nav-active');
-    });
-
-    // Rest of your existing JavaScript...
-    // (Keep all the other functions like search, share, favorites, etc.)
-
-    // Close navbar when clicking on a link (for mobile)
-    navLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-          menuBtn.classList.remove('active');
-          navbar.classList.remove('active');
-          body.classList.remove('nav-active');
-        }
-      });
-    });
-
-    // Search functionality
-    const searchInput = document.getElementById('search');
-    const gameCards = document.querySelectorAll('.game-card');
-
-    searchInput.addEventListener('input', (e) => {
-      const searchTerm = e.target.value.toLowerCase();
-      
-      gameCards.forEach(card => {
-        const title = card.querySelector('.box').getAttribute('data-title') || 
-                      card.querySelector('h3').textContent.toLowerCase();
-        const matches = title.includes(searchTerm);
-        
-        card.style.display = matches ? 'flex' : 'none';
-        if (matches) {
-          card.querySelector('.box').style.animation = 'cardEntry 0.6s forwards';
-        }
-      });
-      
-      // Update game counter
-      updateGameCounter();
-    });
-
-    // Share functionality
-    function shareGame(gameName, event) {
-      event.preventDefault();
-      event.stopPropagation();
-      
-      if (navigator.share) {
-        navigator.share({
-          title: `Try ${gameName}`,
-          text: `Check out this cool ${gameName} game!`,
-          url: window.location.href,
-        }).catch(err => {
-          console.log('Error sharing:', err);
-          fallbackShare(gameName);
-        });
-      } else {
-        fallbackShare(gameName);
-      }
-    }
-
-    function fallbackShare(gameName) {
-      const shareUrl = `mailto:?subject=Try ${encodeURIComponent(gameName)}&body=Check out this game: ${encodeURIComponent(window.location.href)}`;
-      window.open(shareUrl, '_blank');
-    }
-
-    // Favorites System
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize favorites from localStorage
-      let favorites = JSON.parse(localStorage.getItem('gameFavorites')) || {};
-      const favoritesContainer = document.getElementById('favorites-container');
-      
-      // Function to update favorites display
-      function updateFavoritesDisplay() {
-        favoritesContainer.innerHTML = '';
-        Object.keys(favorites).forEach(gameId => {
-          if (favorites[gameId]) {
-            const gameCard = document.querySelector(`.game-card .box#${gameId}`).parentNode;
-            if (gameCard) {
-              const clone = gameCard.cloneNode(true);
-              clone.querySelector('.favorite-btn').classList.add('active');
-              favoritesContainer.appendChild(clone);
-            }
-          }
-        });
-        
-        // Show/hide favorites section based on content
-        document.querySelector('.favorites-section').style.display = 
-          favoritesContainer.children.length > 0 ? 'block' : 'none';
+    const targetElement = document.querySelector(targetId);
+    if (targetElement) {
+      // Close mobile menu if open
+      if (window.innerWidth <= 768) {
+        menuBtn.classList.remove('active');
+        navbar.classList.remove('active');
+        body.classList.remove('nav-active');
       }
       
-      // Set up favorite buttons
-      document.querySelectorAll('.favorite-btn').forEach(btn => {
-        const gameCard = btn.closest('.game-card');
-        const gameId = gameCard.querySelector('.box').id;
-        
-        // Initialize button state
-        if (favorites[gameId]) {
-          btn.classList.add('active');
-        }
-        
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // Toggle favorite status
-          favorites[gameId] = !favorites[gameId];
-          btn.classList.toggle('active');
-          
-          // Create confetti effect if adding to favorites
-          if (favorites[gameId]) {
-            createConfetti(e.clientX, e.clientY);
-          }
-          
-          // Save to localStorage
-          localStorage.setItem('gameFavorites', JSON.stringify(favorites));
-          
-          // Update display
-          updateFavoritesDisplay();
-        });
-      });
+      // Calculate offset (search bar height + extra padding)
+      const offset = searchContainer.offsetHeight + 20;
+      const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
       
-      // Initial display update
-      updateFavoritesDisplay();
-      
-      // Make sure favorites section is visible if there are favorites
-      if (Object.values(favorites).some(val => val)) {
-        document.querySelector('.favorites-section').style.display = 'block';
-      }
-    });
-
-    // Create confetti effect
-    function createConfetti(x, y) {
-      const colors = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81'];
-      
-      for (let i = 0; i < 50; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = `${x}px`;
-        confetti.style.top = `${y}px`;
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.width = `${Math.random() * 10 + 5}px`;
-        confetti.style.height = `${Math.random() * 10 + 5}px`;
-        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-        
-        document.body.appendChild(confetti);
-        
-        // Remove confetti after animation
-        setTimeout(() => {
-          confetti.remove();
-        }, 5000);
-      }
-    }
-
-    // Animate cards on load with staggered delay
-    document.addEventListener('DOMContentLoaded', () => {
-      const cards = document.querySelectorAll('.box');
-      cards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-      });
-      
-      // Initialize game counter
-      updateGameCounter();
-    });
-
-    // Scroll to top button
-    const scrollTopBtn = document.querySelector('.scroll-top');
-    
-    window.addEventListener('scroll', () => {
-      if (window.pageYOffset > 300) {
-        scrollTopBtn.classList.add('visible');
-      } else {
-        scrollTopBtn.classList.remove('visible');
-      }
-    });
-    
-    scrollTopBtn.addEventListener('click', () => {
       window.scrollTo({
-        top: 0,
+        top: targetPosition,
         behavior: 'smooth'
       });
-    });
-
-    // Theme toggle
-    const themeToggle = document.querySelector('.theme-toggle');
-    const themeIcon = themeToggle.querySelector('i');
-    
-    // Check for saved theme preference
-    if (localStorage.getItem('darkMode') === 'enabled') {
-      document.body.classList.add('dark-mode');
-      themeIcon.textContent = '☀️';
     }
+  });
+});
+
+menuBtn.addEventListener('click', () => {
+  menuBtn.classList.toggle('active');
+  navbar.classList.toggle('active');
+  body.classList.toggle('nav-active');
+});
+
+// Close navbar when clicking on a link (for mobile)
+navLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      menuBtn.classList.remove('active');
+      navbar.classList.remove('active');
+      body.classList.remove('nav-active');
+    }
+  });
+});
+
+// Search functionality
+const searchInput = document.getElementById('search');
+const gameCards = document.querySelectorAll('.game-card');
+
+searchInput.addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase();
+  
+  gameCards.forEach(card => {
+    const title = card.querySelector('.box').getAttribute('data-title') || 
+                  card.querySelector('h3').textContent.toLowerCase();
+    const matches = title.includes(searchTerm);
     
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      
-      if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('darkMode', 'enabled');
-        themeIcon.textContent = '☀️';
-      } else {
-        localStorage.setItem('darkMode', 'disabled');
-        themeIcon.textContent = '🌙';
+    card.style.display = matches ? 'flex' : 'none';
+    if (matches) {
+      card.querySelector('.box').style.animation = 'cardEntry 0.6s forwards';
+    }
+  });
+  
+  // Update game counter
+  updateGameCounter();
+});
+
+// Share functionality
+function shareGame(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  // Get the game card element
+  const gameCard = event.target.closest('.game-card');
+  
+  // Get the anchor element and its href
+  const gameLink = gameCard.querySelector('.box');
+  const gameUrl = gameLink.getAttribute('href');
+  
+  // Get the game name
+  const gameName = gameLink.querySelector('h3').textContent;
+  
+  // Construct the full URL (current domain + game path)
+  const fullUrl = window.location.origin + '/' + gameUrl;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: `Try ${gameName}`,
+      text: `Check out this cool ${gameName} game!`,
+      url: fullUrl,
+    }).catch(err => {
+      console.log('Error sharing:', err);
+      fallbackShare(gameName, fullUrl);
+    });
+  } else {
+    fallbackShare(gameName, fullUrl);
+  }
+}
+
+function fallbackShare(gameName, url) {
+  const shareUrl = `mailto:?subject=Try ${encodeURIComponent(gameName)}&body=Check out this game: ${encodeURIComponent(url)}`;
+  window.open(shareUrl, '_blank');
+}
+
+// Set up share buttons
+document.querySelectorAll('.share-btn').forEach(btn => {
+  btn.addEventListener('click', shareGame);
+});
+
+// Favorites System
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize favorites from localStorage
+  let favorites = JSON.parse(localStorage.getItem('gameFavorites')) || {};
+  const favoritesContainer = document.getElementById('favorites-container');
+  
+  // Function to update favorites display
+  function updateFavoritesDisplay() {
+    favoritesContainer.innerHTML = '';
+    Object.keys(favorites).forEach(gameId => {
+      if (favorites[gameId]) {
+        const gameCard = document.querySelector(`.game-card .box#${gameId}`).parentNode;
+        if (gameCard) {
+          const clone = gameCard.cloneNode(true);
+          clone.querySelector('.favorite-btn').classList.add('active');
+          
+          // Update the share button to use the new share function
+          const shareBtn = clone.querySelector('.share-btn');
+          shareBtn.addEventListener('click', shareGame);
+          
+          favoritesContainer.appendChild(clone);
+        }
       }
     });
-
-    // Update game counter
-    function updateGameCounter() {
-      const visibleGames = document.querySelectorAll('#games-container .game-card[style=""]').length + 
-                          document.querySelectorAll('#games-container .game-card[style*="flex"]').length;
-      document.getElementById('game-counter').textContent = visibleGames;
+    
+    document.querySelector('.favorites-section').style.display = 
+      favoritesContainer.children.length > 0 ? 'block' : 'none';
+  }
+  
+  // Set up favorite buttons
+  document.querySelectorAll('.favorite-btn').forEach(btn => {
+    const gameCard = btn.closest('.game-card');
+    const gameId = gameCard.querySelector('.box').id;
+    
+    // Initialize button state
+    if (favorites[gameId]) {
+      btn.classList.add('active');
     }
-
-    // Ripple effect for buttons
-    document.querySelectorAll('.share-btn').forEach(button => {
-      button.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const x = e.clientX - e.target.getBoundingClientRect().left;
-        const y = e.clientY - e.target.getBoundingClientRect().top;
-        
-        const ripple = document.createElement('span');
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        ripple.classList.add('ripple');
-        
-        this.appendChild(ripple);
-        
-        setTimeout(() => {
-          ripple.remove();
-        }, 1000);
-      });
+    
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Toggle favorite status
+      favorites[gameId] = !favorites[gameId];
+      btn.classList.toggle('active');
+      
+      // Create confetti effect if adding to favorites
+      if (favorites[gameId]) {
+        createConfetti(e.clientX, e.clientY);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('gameFavorites', JSON.stringify(favorites));
+      
+      // Update display
+      updateFavoritesDisplay();
     });
+  });
+  
+  // Initial display update
+  updateFavoritesDisplay();
+});
+
+// Create confetti effect
+function createConfetti(x, y) {
+  const colors = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81'];
+  
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = `${x}px`;
+    confetti.style.top = `${y}px`;
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.width = `${Math.random() * 10 + 5}px`;
+    confetti.style.height = `${Math.random() * 10 + 5}px`;
+    confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+    
+    document.body.appendChild(confetti);
+    
+    // Remove confetti after animation
+    setTimeout(() => {
+      confetti.remove();
+    }, 5000);
+  }
+}
+
+// Animate cards on load with staggered delay
+document.addEventListener('DOMContentLoaded', () => {
+  const cards = document.querySelectorAll('.box');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.1}s`;
+  });
+});
+
+// Scroll to top button
+const scrollTopBtn = document.querySelector('.scroll-top');
+
+window.addEventListener('scroll', () => {
+  if (window.pageYOffset > 300) {
+    scrollTopBtn.classList.add('visible');
+  } else {
+    scrollTopBtn.classList.remove('visible');
+  }
+});
+
+scrollTopBtn.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+});
+
+// Theme toggle
+const themeToggle = document.querySelector('.theme-toggle');
+const themeIcon = themeToggle.querySelector('i');
+
+// Check for saved theme preference
+if (localStorage.getItem('darkMode') === 'enabled') {
+  document.body.classList.add('dark-mode');
+  themeIcon.textContent = '☀️';
+}
+
+themeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  
+  if (document.body.classList.contains('dark-mode')) {
+    localStorage.setItem('darkMode', 'enabled');
+    themeIcon.textContent = '☀️';
+  } else {
+    localStorage.setItem('darkMode', 'disabled');
+    themeIcon.textContent = '🌙';
+  }
+});
+
+// Update game counter
+function updateGameCounter() {
+  const visibleGames = document.querySelectorAll('#games-container .game-card[style=""]').length + 
+                      document.querySelectorAll('#games-container .game-card[style*="flex"]').length;
+  document.getElementById('game-counter').textContent = visibleGames;
+}
   </script>
 </body>
 </html>
