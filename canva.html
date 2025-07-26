@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drawing Pad</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --primary-hover: #45a049;
+            --active-color: #2196F3;
+            --danger-color: #f44336;
+            --danger-hover: #d32f2f;
+            --new-color: #ff9800;
+            --new-hover: #e68a00;
+            --line-color: #9c27b0;
+            --line-hover: #7b1fa2;
+            --polygon-color: #673ab7;
+            --polygon-hover: #5e35b1;
+            --circle-color: #009688;
+            --circle-hover: #00796b;
+            --undo-redo-color: #607d8b;
+            --undo-redo-hover: #455a64;
+            --disabled-color: #cccccc;
+            --border-radius: 4px;
+            --shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0.5em 0;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: var(--border-radius);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        label {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            padding: 8px 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 0.85rem;
+            min-width: 60px;
+        }
+        
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        button.active {
+            background-color: var(--active-color);
+        }
+        
+        button.danger {
+            background-color: var(--danger-color);
+        }
+        
+        button.danger:hover {
+            background-color: var(--danger-hover);
+        }
+        
+        button.new {
+            background-color: var(--new-color);
+        }
+        
+        button.new:hover {
+            background-color: var(--new-hover);
+        }
+        
+        button.line {
+            background-color: var(--line-color);
+        }
+        
+        button.line:hover {
+            background-color: var(--line-hover);
+        }
+        
+        button.polygon {
+            background-color: var(--polygon-color);
+        }
+        
+        button.polygon:hover {
+            background-color: var(--polygon-hover);
+        }
+        
+        button.circle {
+            background-color: var(--circle-color);
+        }
+        
+        button.circle:hover {
+            background-color: var(--circle-hover);
+        }
+        
+        button.undo-redo {
+            background-color: var(--undo-redo-color);
+        }
+        
+        button.undo-redo:hover {
+            background-color: var(--undo-redo-hover);
+        }
+        
+        button:disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 0 auto;
+            width: 100%;
+            height: 0;
+            padding-bottom: 62.5%; /* 5:8 aspect ratio (800:500) */
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background-color: white;
+            touch-action: none;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        
+        input[type="color"] {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        
+        input[type="range"] {
+            width: 80px;
+        }
+        
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        .file-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .file-dialog-content {
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+        
+        .file-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .file-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .file-item-name {
+            flex-grow: 1;
+        }
+        
+        .file-item-delete {
+            color: var(--danger-color);
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .instructions {
+            font-size: 0.85em;
+            color: #666;
+            margin: 5px 0;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .home-button {
+            text-decoration: none;
+            color: white;
+            background-color: royalblue;
+            border-radius: 50%;
+            padding: 8px;
+            height: 40px;
+            width: 40px;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            text-align: center;
+            vertical-align: center;
+            font-size: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .controls {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+            }
+            
+            .canvas-container {
+                padding-bottom: 62.5%; /* Maintain 5:8 aspect ratio */
+            }
+            
+            input[type="range"] {
+                width: 100px;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .controls {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        /* Add this to your existing CSS */
+.file-controls {
+    display: contents; /* Default behavior for desktop */
+}
+
+@media (max-width: 480px) {
+    .file-controls {
+        display: flex;
+        flex-direction: column;
+        grid-column: 1 / -1; /* Make it span all columns */
+        gap: 8px;
+    }
+    
+    .file-controls .filename-group {
+        order: 1;
+    }
+    
+    .file-controls .button-group {
+        order: 2;
+        display: flex;
+        gap: 8px;
+    }
+    
+    .file-controls .button-group button {
+        flex: 1;
+    }
+}
+    </style>
+</head>
+<body>
+    <a href="index.html" class="home-button">&#8962;</a>
+    
+    <div class="container">
+        <h1>Drawing Pad</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+            
+            <div class="control-group">
+                <label for="penSize">Size: <span id="penSizeValue">5</span></label>
+                <input type="range" id="penSize" min="1" max="50" value="5">
+            </div>
+            
+            <button id="penBtn" class="active">Pen</button>
+            <button id="eraserBtn">Eraser</button>
+            <button id="highlightBtn">Highlighter</button>
+            <button id="lineBtn" class="line">Line</button>
+            <button id="circleBtn" class="circle">Circle</button>
+            <button id="polygonBtn" class="polygon">Polygon</button>
+            
+            
+                <button id="undoBtn" class="undo-redo" disabled>Undo</button>
+                <button id="redoBtn" class="undo-redo" disabled>Redo</button>
+            
+            
+            <!-- Replace your existing filename and button controls with this -->
+<div class="file-controls">
+    <div class="control-group filename-group">
+        <label for="fileName">Filename:</label>
+        <input type="text" id="fileName" placeholder="Auto-generated">
+    </div>
+    
+    <div class="control-group button-group">
+        <button id="newBtn" class="new">New</button>
+        <button id="clearBtn" class="danger">Clear</button>
+        <button id="saveBtn">Save</button>
+        <button id="loadBtn">Load</button>
+    </div>
+</div>
+            
+            <div class="control-group">
+                
+            </div>
+        </div>
+        
+        <div id="polygonInstructions" class="instructions" style="display: none;">
+            Click to place polygon points. Click near first point to complete.
+        </div>
+        <div id="lineInstructions" class="instructions" style="display: none;">
+            Click to start line, click again to finish.
+        </div>
+        <div id="circleInstructions" class="instructions" style="display: none;">
+            Click to set center, click again to set radius.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- File Load Dialog -->
+    <div class="file-dialog" id="loadDialog">
+        <div class="file-dialog-content">
+            <h2>Select a Drawing to Load</h2>
+            <div class="file-list" id="fileList">
+                <!-- Files will be listed here -->
+            </div>
+            <div class="dialog-buttons">
+                <button id="cancelLoadBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Canvas setup
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Adjust canvas size based on container
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                
+                if (canvas.width !== width || canvas.height !== height) {
+                    // Save the current drawing
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // Resize the canvas
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Restore the drawing
+                    ctx.putImageData(imageData, 0, 0);
+                }
+            }
+            
+            // Initial resize
+            resizeCanvas();
+            
+            // Resize when window changes
+            window.addEventListener('resize', resizeCanvas);
+            
+            // State variables
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let currentTool = 'pen';
+            let currentColor = '#000000';
+            let currentSize = 5;
+            let lineStartPoint = null;
+            let previewLine = false;
+            let polygonPoints = [];
+            let previewPolygon = false;
+            let circleCenter = null;
+            let previewCircle = false;
+            
+            // Undo/redo system
+            let drawingHistory = [];
+            let historyIndex = -1;
+            const MAX_HISTORY = 50;
+            
+            // DOM elements
+            const colorPicker = document.getElementById('colorPicker');
+            const penSize = document.getElementById('penSize');
+            const penSizeValue = document.getElementById('penSizeValue');
+            const penBtn = document.getElementById('penBtn');
+            const eraserBtn = document.getElementById('eraserBtn');
+            const highlightBtn = document.getElementById('highlightBtn');
+            const lineBtn = document.getElementById('lineBtn');
+            const circleBtn = document.getElementById('circleBtn');
+            const polygonBtn = document.getElementById('polygonBtn');
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const newBtn = document.getElementById('newBtn');
+            const fileNameInput = document.getElementById('fileName');
+            const loadDialog = document.getElementById('loadDialog');
+            const fileList = document.getElementById('fileList');
+            const cancelLoadBtn = document.getElementById('cancelLoadBtn');
+            const polygonInstructions = document.getElementById('polygonInstructions');
+            const lineInstructions = document.getElementById('lineInstructions');
+            const circleInstructions = document.getElementById('circleInstructions');
+            
+            // Initialize canvas
+            clearCanvas(false);
+            
+            // Event listeners for drawing
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mouseout', handleMouseOut);
+            
+            // Touch support
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd);
+            
+            // Control event listeners
+            colorPicker.addEventListener('input', updateColor);
+            penSize.addEventListener('input', updateSize);
+            penBtn.addEventListener('click', () => setTool('pen'));
+            eraserBtn.addEventListener('click', () => setTool('eraser'));
+            highlightBtn.addEventListener('click', () => setTool('highlight'));
+            lineBtn.addEventListener('click', () => setTool('line'));
+            circleBtn.addEventListener('click', () => setTool('circle'));
+            polygonBtn.addEventListener('click', () => setTool('polygon'));
+            undoBtn.addEventListener('click', undo);
+            redoBtn.addEventListener('click', redo);
+            clearBtn.addEventListener('click', () => clearCanvas(true));
+            saveBtn.addEventListener('click', saveDrawing);
+            loadBtn.addEventListener('click', showLoadDialog);
+            newBtn.addEventListener('click', () => {
+                if (confirm('Start a new drawing? Any unsaved changes will be lost.')) {
+                    clearCanvas(false);
+                    fileNameInput.value = '';
+                }
+            });
+            cancelLoadBtn.addEventListener('click', hideLoadDialog);
+            
+            // Drawing functions
+            function handleMouseDown(e) {
+                e.preventDefault();
+                const [x, y] = getPosition(e);
+                
+                if (currentTool === 'line') {
+                    if (!lineStartPoint) {
+                        // First click - set starting point
+                        lineStartPoint = { x, y };
+                        previewLine = true;
+                        saveCanvasState();
+                    } else {
+                        // Second click - draw the line
+                        drawLine(lineStartPoint.x, lineStartPoint.y, x, y);
+                        lineStartPoint = null;
+                        previewLine = false;
+                        saveCanvasState();
+                        saveToHistory();
+                    }
+                } else if (currentTool === 'circle') {
+                    if (!circleCenter) {
+                        // First click - set center
+                        circleCenter = { x, y };
+                        previewCircle = true;
+                        saveCanvasState();
+                    } else {
+                        // Second click - draw the circle
+                        const radius = Math.sqrt(Math.pow(x - circleCenter.x, 2) + Math.pow(y - circleCenter.y, 2));
+                        drawCircle(circleCenter.x, circleCenter.y, radius);
+                        circleCenter = null;
+                        previewCircle = false;
+                        saveCanvasState();
+                        saveToHistory();
+                    }
+                } else if (currentTool === 'polygon') {
+                    if (polygonPoints.length === 0) {
+                        // First point of polygon
+                        polygonPoints.push({ x, y });
+                        previewPolygon = true;
+                        saveCanvasState();
+                    } else {
+                        // Check if clicked near first point to complete polygon
+                        const firstPoint = polygonPoints[0];
+                        const distance = Math.sqrt(Math.pow(x - firstPoint.x, 2) + Math.pow(y - firstPoint.y, 2));
+                        
+                        if (distance < 15 && polygonPoints.length > 1) {
+                            // Close the polygon
+                            drawPolygon(true);
+                            polygonPoints = [];
+                            previewPolygon = false;
+                            saveCanvasState();
+                            saveToHistory();
+                        } else {
+                            // Add new point to polygon
+                            polygonPoints.push({ x, y });
+                            saveCanvasState();
+                        }
+                    }
+                } else {
+                    // Regular drawing tools
+                    isDrawing = true;
+                    [lastX, lastY] = [x, y];
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    saveCanvasState();
+                }
+            }
+            
+            function handleMouseMove(e) {
+                e.preventDefault();
+                const [x, y] = getPosition(e);
+                lastX = x;
+                lastY = y;
+                
+                if (currentTool === 'line' && lineStartPoint) {
+                    // Preview the line as mouse moves
+                    previewLine = true;
+                    drawCanvas();
+                } else if (currentTool === 'circle' && circleCenter) {
+                    // Preview the circle as mouse moves
+                    previewCircle = true;
+                    drawCanvas();
+                } else if (currentTool === 'polygon' && polygonPoints.length > 0) {
+                    // Preview the polygon as mouse moves
+                    previewPolygon = true;
+                    drawCanvas();
+                } else if (isDrawing && !['line', 'circle', 'polygon'].includes(currentTool)) {
+                    ctx.lineTo(x, y);
+                    applyToolStyle();
+                    ctx.stroke();
+                    
+                    // Start a new segment from current position
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                }
+            }
+            
+            function handleMouseUp() {
+                if (currentTool !== 'line' && currentTool !== 'circle' && currentTool !== 'polygon' && isDrawing) {
+                    isDrawing = false;
+                    saveCanvasState();
+                    saveToHistory();
+                }
+            }
+            
+            function handleMouseOut() {
+                if (currentTool !== 'line' && currentTool !== 'circle' && currentTool !== 'polygon' && isDrawing) {
+                    isDrawing = false;
+                    saveCanvasState();
+                    saveToHistory();
+                }
+            }
+            
+            function drawLine(x1, y1, x2, y2) {
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                
+                applyToolStyle();
+                ctx.stroke();
+            }
+            
+            function drawCircle(centerX, centerY, radius) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                applyToolStyle();
+                ctx.stroke();
+            }
+            
+            function drawPolygon(closeShape = false) {
+                if (polygonPoints.length === 0) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+                
+                for (let i = 1; i < polygonPoints.length; i++) {
+                    ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+                }
+                
+                if (closeShape) {
+                    ctx.closePath();
+                } else if (previewPolygon) {
+                    ctx.lineTo(lastX, lastY);
+                }
+                
+                applyToolStyle();
+                ctx.stroke();
+            }
+            
+            function drawCanvas() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Restore saved image
+                if (historyIndex >= 0 && drawingHistory[historyIndex]) {
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0);
+                        drawPreview();
+                    };
+                    img.src = drawingHistory[historyIndex];
+                } else {
+                    drawPreview();
+                }
+            }
+            
+            function drawPreview() {
+                // Draw preview elements
+                if (previewLine && lineStartPoint) {
+                    drawLine(lineStartPoint.x, lineStartPoint.y, lastX, lastY);
+                }
+                
+                if (previewCircle && circleCenter) {
+                    const radius = Math.sqrt(Math.pow(lastX - circleCenter.x, 2) + Math.pow(lastY - circleCenter.y, 2));
+                    drawCircle(circleCenter.x, circleCenter.y, radius);
+                }
+                
+                if (previewPolygon && polygonPoints.length > 0) {
+                    drawPolygon();
+                }
+            }
+            
+            function saveCanvasState() {
+                // This is now handled by the history system
+            }
+            
+            // Undo/redo functions
+            function saveToHistory() {
+                // If we're not at the end of history, remove future states
+                if (historyIndex < drawingHistory.length - 1) {
+                    drawingHistory = drawingHistory.slice(0, historyIndex + 1);
+                }
+                
+                // Add current state to history
+                drawingHistory.push(canvas.toDataURL());
+                historyIndex++;
+                
+                // Limit history size
+                if (drawingHistory.length > MAX_HISTORY) {
+                    drawingHistory.shift();
+                    historyIndex--;
+                }
+                
+                updateUndoRedoButtons();
+            }
+            
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    restoreFromHistory();
+                }
+                updateUndoRedoButtons();
+            }
+            
+            function redo() {
+                if (historyIndex < drawingHistory.length - 1) {
+                    historyIndex++;
+                    restoreFromHistory();
+                }
+                updateUndoRedoButtons();
+            }
+            
+            function restoreFromHistory() {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = drawingHistory[historyIndex];
+            }
+            
+            function updateUndoRedoButtons() {
+                undoBtn.disabled = historyIndex <= 0;
+                redoBtn.disabled = historyIndex >= drawingHistory.length - 1;
+            }
+            
+            function applyToolStyle() {
+                if (currentTool === 'pen') {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = currentColor;
+                    ctx.globalAlpha = 1.0;
+                } else if (currentTool === 'eraser') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.globalAlpha = 1.0;
+                } else if (currentTool === 'highlight') {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = currentColor;
+                    ctx.globalAlpha = 0.4;
+                } else if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'polygon') {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = currentColor;
+                    ctx.globalAlpha = 1.0;
+                }
+                
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            }
+            
+            // Touch event handlers
+            function handleTouchStart(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            }
+            
+            function handleTouchMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            }
+            
+            function handleTouchEnd(e) {
+                e.preventDefault();
+                const mouseEvent = new MouseEvent('mouseup', {});
+                canvas.dispatchEvent(mouseEvent);
+            }
+            
+            // Helper function to get position
+            function getPosition(e) {
+                const rect = canvas.getBoundingClientRect();
+                let x, y;
+                
+                if (e.type.includes('touch')) {
+                    x = e.touches[0].clientX - rect.left;
+                    y = e.touches[0].clientY - rect.top;
+                } else {
+                    x = e.clientX - rect.left;
+                    y = e.clientY - rect.top;
+                }
+                
+                // Scale coordinates to match canvas dimensions
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                
+                return [x * scaleX, y * scaleY];
+            }
+            
+            // Control functions
+            function updateColor() {
+                currentColor = colorPicker.value;
+            }
+            
+            function updateSize() {
+                currentSize = penSize.value;
+                penSizeValue.textContent = currentSize;
+            }
+            
+            function setTool(tool) {
+                currentTool = tool;
+                lineStartPoint = null;
+                previewLine = false;
+                polygonPoints = [];
+                previewPolygon = false;
+                circleCenter = null;
+                previewCircle = false;
+                
+                // Update button states
+                penBtn.classList.remove('active');
+                eraserBtn.classList.remove('active');
+                highlightBtn.classList.remove('active');
+                lineBtn.classList.remove('active');
+                circleBtn.classList.remove('active');
+                polygonBtn.classList.remove('active');
+                
+                // Show/hide instructions
+                polygonInstructions.style.display = 'none';
+                lineInstructions.style.display = 'none';
+                circleInstructions.style.display = 'none';
+                
+                if (tool === 'pen') {
+                    penBtn.classList.add('active');
+                } else if (tool === 'eraser') {
+                    eraserBtn.classList.add('active');
+                } else if (tool === 'highlight') {
+                    highlightBtn.classList.add('active');
+                } else if (tool === 'line') {
+                    lineBtn.classList.add('active');
+                    lineInstructions.style.display = 'block';
+                } else if (tool === 'circle') {
+                    circleBtn.classList.add('active');
+                    circleInstructions.style.display = 'block';
+                } else if (tool === 'polygon') {
+                    polygonBtn.classList.add('active');
+                    polygonInstructions.style.display = 'block';
+                }
+            }
+            
+            function clearCanvas(askConfirmation) {
+                if (askConfirmation && !confirm('Are you sure you want to clear the canvas?')) {
+                    return;
+                }
+                
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Reset history
+                drawingHistory = [canvas.toDataURL()];
+                historyIndex = 0;
+                updateUndoRedoButtons();
+            }
+            
+            function generateDefaultFilename() {
+                const now = new Date();
+                const dateStr = now.toISOString().replace(/[:.]/g, '-').split('T')[0];
+                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+                return `drawing-${dateStr}-${timeStr}`;
+            }
+            
+            function saveDrawing() {
+                let fileName = fileNameInput.value.trim();
+                if (!fileName) {
+                    fileName = generateDefaultFilename();
+                    fileNameInput.value = fileName;
+                }
+                
+                const drawingData = canvas.toDataURL('image/png');
+                
+                // Save with timestamp and filename
+                const saveData = {
+                    data: drawingData,
+                    name: fileName,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Get existing saves or create new array
+                const existingSaves = JSON.parse(localStorage.getItem('drawingSaves') || '[]');
+                
+                // Add new save
+                existingSaves.push(saveData);
+                
+                // Store back in localStorage
+                localStorage.setItem('drawingSaves', JSON.stringify(existingSaves));
+                
+                alert(`Drawing saved as "${fileName}"!`);
+            }
+            
+            function showLoadDialog() {
+                // Clear existing list
+                fileList.innerHTML = '';
+                
+                // Get saved drawings
+                const savedDrawings = JSON.parse(localStorage.getItem('drawingSaves') || '[]');
+                
+                if (savedDrawings.length === 0) {
+                    fileList.innerHTML = '<div class="file-item">No saved drawings found</div>';
+                } else {
+                    // Sort by timestamp (newest first)
+                    savedDrawings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    // Add each drawing to the list
+                    savedDrawings.forEach((drawing, index) => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        const date = new Date(drawing.timestamp);
+                        const formattedDate = date.toLocaleString();
+                        
+                        fileItem.innerHTML = `
+                            <div class="file-item-name">
+                                <strong>${drawing.name}</strong>
+                                <div style="font-size: 0.8em; color: #666;">${formattedDate}</div>
+                            </div>
+                            <div class="file-item-delete" data-index="${index}">🗑️</div>
+                        `;
+                        
+                        fileItem.addEventListener('click', (e) => {
+                            if (!e.target.classList.contains('file-item-delete')) {
+                                loadDrawing(drawing.data);
+                                fileNameInput.value = drawing.name;
+                                hideLoadDialog();
+                            }
+                        });
+                        
+                        // Add delete button handler
+                        const deleteBtn = fileItem.querySelector('.file-item-delete');
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete "${drawing.name}"?`)) {
+                                deleteDrawing(index);
+                                showLoadDialog(); // Refresh the list
+                            }
+                        });
+                        
+                        fileList.appendChild(fileItem);
+                    });
+                }
+                
+                // Show dialog
+                loadDialog.style.display = 'flex';
+            }
+            
+            function deleteDrawing(index) {
+                const savedDrawings = JSON.parse(localStorage.getItem('drawingSaves') || '[]');
+                savedDrawings.splice(index, 1);
+                localStorage.setItem('drawingSaves', JSON.stringify(savedDrawings));
+            }
+            
+            function hideLoadDialog() {
+                loadDialog.style.display = 'none';
+            }
+            
+            function loadDrawing(dataUrl) {
+                const img = new Image();
+                img.onload = function() {
+                    // Clear canvas first
+                    clearCanvas(false);
+                    
+                    // Draw the loaded image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Reset history with the loaded image
+                    drawingHistory = [canvas.toDataURL()];
+                    historyIndex = 0;
+                    updateUndoRedoButtons();
+                };
+                img.onerror = function() {
+                    alert('Error loading the drawing');
+                };
+                img.src = dataUrl;
+            }
+        });
+    </script>
+</body>
+</html>

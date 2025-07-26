@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Emoji RPS</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .score-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .choice {
+            font-size: 5rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .choice:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .choice:active {
+            transform: scale(0.95);
+        }
+        
+        .result-container {
+            font-size: 2rem;
+            margin: 20px 0;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .emoji-battle {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            font-size: 4rem;
+            margin: 20px 0;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s;
+        }
+        
+        .emoji-battle.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .vs {
+            font-size: 2rem;
+            background: #e63946;
+            padding: 5px 15px;
+            border-radius: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .outcome {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+        }
+        
+        .outcome.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .reset-btn {
+            background: #e63946;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            border-radius: 50%;
+            animation: confetti-fall 3s linear forwards;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .history {
+            margin-top: 30px;
+            max-height: 100px;
+            overflow-y: auto;
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .history-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .choices {
+                gap: 10px;
+            }
+            
+            .choice {
+                width: 80px;
+                height: 80px;
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .emoji-battle {
+                font-size: 3rem;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+ <div><a href="index.html" style="text-decoration: none;color:white;background-color: royalblue;border-radius:50%;padding:5px; height:40px;width:40px; position:fixed;top:20px;right:20px; text-align: center;vertical-align: center;font-size: 25px;">&#8962;</a></div>
+    <h1>Ultimate Emoji RPS</h1>
+    
+    <div class="score-container">
+        <div>Player: <span id="player-score">0</span></div>
+        <div>Computer: <span id="computer-score">0</span></div>
+    </div>
+    
+    <div class="choices">
+        <button class="choice" data-choice="✊">✊</button>
+        <button class="choice" data-choice="✋">✋</button>
+        <button class="choice" data-choice="✌️">✌️</button>
+    </div>
+    
+    <div class="result-container">
+        <div class="emoji-battle" id="emoji-battle">
+            <span id="player-choice-emoji"></span>
+            <span class="vs">VS</span>
+            <span id="computer-choice-emoji"></span>
+        </div>
+        <div class="outcome" id="outcome"></div>
+    </div>
+    
+    <button class="reset-btn" id="reset-btn">Reset Game</button>
+    
+    <div class="history" id="history">
+        <h3>Game History</h3>
+        <div id="history-items"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const choices = document.querySelectorAll('.choice');
+            const playerScoreEl = document.getElementById('player-score');
+            const computerScoreEl = document.getElementById('computer-score');
+            const playerChoiceEmoji = document.getElementById('player-choice-emoji');
+            const computerChoiceEmoji = document.getElementById('computer-choice-emoji');
+            const emojiBattle = document.getElementById('emoji-battle');
+            const outcomeEl = document.getElementById('outcome');
+            const resetBtn = document.getElementById('reset-btn');
+            const historyItems = document.getElementById('history-items');
+            
+            let playerScore = 0;
+            let computerScore = 0;
+            let gameHistory = [];
+            
+            // Game logic
+            choices.forEach(choice => {
+                choice.addEventListener('click', () => {
+                    const playerChoice = choice.dataset.choice;
+                    const computerChoice = getComputerChoice();
+                    const result = determineWinner(playerChoice, computerChoice);
+                    
+                    // Update UI
+                    playerChoiceEmoji.textContent = playerChoice;
+                    computerChoiceEmoji.textContent = computerChoice;
+                    
+                    // Show battle animation
+                    emojiBattle.classList.add('show');
+                    
+                    // Update scores and outcome with delay
+                    setTimeout(() => {
+                        updateScore(result);
+                        showOutcome(result, playerChoice, computerChoice);
+                        addToHistory(playerChoice, computerChoice, result);
+                    }, 500);
+                });
+            });
+            
+            // Reset game
+            resetBtn.addEventListener('click', resetGame);
+            
+            function getComputerChoice() {
+                const choices = ['✊', '✋', '✌️'];
+                const randomIndex = Math.floor(Math.random() * 3);
+                return choices[randomIndex];
+            }
+            
+            function determineWinner(player, computer) {
+                if (player === computer) return 'draw';
+                
+                if (
+                    (player === '✊' && computer === '✌️') ||
+                    (player === '✋' && computer === '✊') ||
+                    (player === '✌️' && computer === '✋')
+                ) {
+                    return 'player';
+                } else {
+                    return 'computer';
+                }
+            }
+            
+            function updateScore(result) {
+                if (result === 'player') {
+                    playerScore++;
+                    playerScoreEl.textContent = playerScore;
+                    createConfetti();
+                } else if (result === 'computer') {
+                    computerScore++;
+                    computerScoreEl.textContent = computerScore;
+                }
+            }
+            
+            function showOutcome(result, playerChoice, computerChoice) {
+                let outcomeText = '';
+                
+                if (result === 'draw') {
+                    outcomeText = 'It\'s a draw!';
+                } else if (result === 'player') {
+                    outcomeText = `You win! ${getWinPhrase(playerChoice, computerChoice)}`;
+                } else {
+                    outcomeText = `You lose! ${getLosePhrase(playerChoice, computerChoice)}`;
+                }
+                
+                outcomeEl.textContent = outcomeText;
+                outcomeEl.classList.add('show');
+            }
+            
+            function getWinPhrase(player, computer) {
+                const phrases = {
+                    '✊✌️': 'Rock crushes Scissors!',
+                    '✋✊': 'Paper covers Rock!',
+                    '✌️✋': 'Scissors cut Paper!'
+                };
+                return phrases[player + computer] || 'Nice one!';
+            }
+            
+            function getLosePhrase(player, computer) {
+                const phrases = {
+                    '✊✋': 'Paper covers Rock!',
+                    '✋✌️': 'Scissors cut Paper!',
+                    '✌️✊': 'Rock crushes Scissors!'
+                };
+                return phrases[player + computer] || 'Better luck next time!';
+            }
+            
+            function addToHistory(player, computer, result) {
+                const timestamp = new Date().toLocaleTimeString();
+                let resultText = '';
+                let resultClass = '';
+                
+                if (result === 'draw') {
+                    resultText = 'Draw';
+                    resultClass = 'draw';
+                } else if (result === 'player') {
+                    resultText = 'Win';
+                    resultClass = 'win';
+                } else {
+                    resultText = 'Lose';
+                    resultClass = 'lose';
+                }
+                
+                gameHistory.unshift({ player, computer, resultText, timestamp });
+                
+                // Update history UI
+                historyItems.innerHTML = '';
+                gameHistory.slice(0, 5).forEach(game => {
+                    const item = document.createElement('div');
+                    item.className = `history-item ${game.resultText.toLowerCase()}`;
+                    item.innerHTML = `
+                        <span>${game.player} vs ${game.computer}</span>
+                        <span class="${game.resultText.toLowerCase()}">${game.resultText}</span>
+                        <span>${game.timestamp}</span>
+                    `;
+                    historyItems.appendChild(item);
+                });
+            }
+            
+            function resetGame() {
+                playerScore = 0;
+                computerScore = 0;
+                playerScoreEl.textContent = '0';
+                computerScoreEl.textContent = '0';
+                emojiBattle.classList.remove('show');
+                outcomeEl.classList.remove('show');
+                gameHistory = [];
+                historyItems.innerHTML = '';
+            }
+            
+            function createConfetti() {
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Random properties
+                    const size = Math.random() * 10 + 5;
+                    const posX = Math.random() * window.innerWidth;
+                    const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    const duration = Math.random() * 2 + 2;
+                    
+                    confetti.style.width = `${size}px`;
+                    confetti.style.height = `${size}px`;
+                    confetti.style.left = `${posX}px`;
+                    confetti.style.backgroundColor = color;
+                    confetti.style.animationDuration = `${duration}s`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Remove confetti after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, duration * 1000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
