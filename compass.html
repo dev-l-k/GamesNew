@@ -1,698 +1,970 @@
-<!DOCTYPE html>  <html>  
-<head>  
-  <title>Advanced Dynamic Compass with Needle Labels</title>  
-  <style> 
-  html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-    :root {  
-      --primary-color: #3498db;  
-      --secondary-color: #e74c3c;  
-      --accent-color: #f1c40f;  
-      --dark-color: #2c3e50;  
-      --light-color: #ecf0f1;  
-    }  body {  
-  font-family: 'Roboto', sans-serif;  
-  margin: 0;  
-  padding: 0;  
-  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);  
-  color: white;  
-  min-height: 100vh;  
-  display: flex;  
-  flex-direction: column;  
-  align-items: center;  
-  justify-content: center;  
-  overflow-x: hidden;  
-}  
-  
-.container {
-  width: 100%;
-  height: 100%;
-  max-height: 100vh;
-  overflow: hidden;
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  animation: fadeIn 1s ease-out;
-}
-  
-h1 {  
-  font-size: 2.5rem;  
-  margin-bottom: 10px;  
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);  
-  background: linear-gradient(to right, #ffffff, #c9d6ff);  
-  -webkit-background-clip: text;  
-  background-clip: text;  
-  color: transparent;  
-}  
-  
-#direction {  
-  font-size: 2.2rem;  
-  font-weight: bold;  
-  margin: 15px 0;  
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);  
-  transition: all 0.3s ease;  
-  background: linear-gradient(to right, #ffefba, #ffffff);  
-  -webkit-background-clip: text;  
-  background-clip: text;  
-  color: transparent;  
-}  
-  
-.button-group {  
-  display: flex;  
-  justify-content: center;  
-  gap: 15px;  
-  margin: 25px 0;  
-  flex-wrap: wrap;  
-}  
-  
-button {  
-  padding: 12px 25px;  
-  font-size: 1rem;  
-  font-weight: bold;  
-  border: none;  
-  border-radius: 30px;  
-  cursor: pointer;  
-  transition: all 0.3s ease;  
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);  
-  position: relative;  
-  overflow: hidden;  
-  z-index: 1;  
-}  
-  
-button:before {  
-  content: '';  
-  position: absolute;  
-  top: 0;  
-  left: -100%;  
-  width: 100%;  
-  height: 100%;  
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);  
-  transition: 0.5s;  
-  z-index: -1;  
-}  
-  
-button:hover:before {  
-  left: 100%;  
-}  
-  
-button:hover {  
-  transform: translateY(-3px);  
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);  
-}  
-  
-button:active {  
-  transform: translateY(1px);  
-}  
-  
-#enable-btn {  
-  background: linear-gradient(45deg, #3498db, #2980b9);  
-  color: white;  
-}  
-  
-#calibrate-btn {  
-  background: linear-gradient(45deg, #e74c3c, #c0392b);  
-  color: white;  
-}  
-  
-.compass-container {  
-  position: relative;  
-  width: 300px;  
-  height: 300px;  
-  margin: 20px auto;  
-  perspective: 1000px;  
-}  
-  
-.compass {  
-  width: 100%;  
-  height: 100%;  
-  position: relative;  
-  border: 8px solid rgba(255, 255, 255, 0.1);  
-  border-radius: 50%;  
-  box-shadow:   
-    0 0 30px rgba(0, 0, 0, 0.6),  
-    inset 0 0 30px rgba(0, 0, 0, 0.3),  
-    0 0 0 2px rgba(255, 255, 255, 0.1);  
-  background: radial-gradient(circle, #2c3e50, #1a1a2e);  
-  transform-style: preserve-3d;  
-  transition: transform 0.5s ease-out;  
-}  
-  
-.compass-face {  
-  width: 100%;  
-  height: 100%;  
-  position: relative;  
-  border-radius: 50%;  
-  transform-style: preserve-3d;  
-}  
-  
-.modern-needle {  
-  position: absolute;  
-  width: 100%;  
-  height: 100%;  
-  top: 0;  
-  left: 0;  
-  z-index: 15;  
-}  
-  
-.needle-north {  
-  position: absolute;  
-  width: 0;  
-  height: 0;  
-  border-left: 15px solid transparent;  
-  border-right: 15px solid transparent;  
-  border-bottom: 140px solid #e74c3c;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%) translateY(-60px);  
-  filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.7));  
-  z-index: 16;  
-}  
-  
-.needle-south {  
-  position: absolute;  
-  width: 0;  
-  height: 0;  
-  border-left: 15px solid transparent;  
-  border-right: 15px solid transparent;  
-  border-top: 110px solid #3498db;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%) translateY(50px);  
-  filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.7));  
-  z-index: 16;  
-}  
-  
-.needle-east {  
-  position: absolute;  
-  width: 0;  
-  height: 0;  
-  border-top: 12px solid transparent;  
-  border-bottom: 12px solid transparent;  
-  border-left: 110px solid #2ecc71;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%) translateX(50px);  
-  filter: drop-shadow(0 0 5px rgba(46, 204, 113, 0.7));  
-  z-index: 15;  
-}  
-  
-.needle-west {  
-  position: absolute;  
-  width: 0;  
-  height: 0;  
-  border-top: 12px solid transparent;  
-  border-bottom: 12px solid transparent;  
-  border-right: 110px solid #f39c12;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%) translateX(-50px);  
-  filter: drop-shadow(0 0 5px rgba(243, 156, 18, 0.7));  
-  z-index: 15;  
-}  
-  
-.needle-center {  
-  width: 30px;  
-  height: 30px;  
-  background: radial-gradient(circle, #ffffff, #cccccc);  
-  border-radius: 50%;  
-  position: absolute;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%);  
-  z-index: 20;  
-  box-shadow:   
-    0 0 10px rgba(255, 255, 255, 0.8),  
-    inset 0 0 5px rgba(0, 0, 0, 0.5);  
-  border: 2px solid #333;  
-}  
-  
-.needle-shadow {  
-  position: absolute;  
-  width: 120%;  
-  height: 120%;  
-  top: -10%;  
-  left: -10%;  
-  background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, transparent 70%);  
-  border-radius: 50%;  
-  z-index: 14;  
-  pointer-events: none;  
-}  
-  
-/* Needle Labels (N, S, E, W) */  
-.needle-label {  
-  position: absolute;  
-  font-weight: bold;  
-  color: white;  
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);  
-  z-index: 17;  
-  font-size: 1.2em;  
-}  
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Advanced Dynamic Compass with Needle Labels</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+      touch-action: manipulation;
+    }
+    
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #e74c3c;
+      --accent-color: #f1c40f;
+      --dark-color: #2c3e50;
+      --light-color: #ecf0f1;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 1s ease-out;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(to right, #ffffff, #c9d6ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    #direction {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 15px 0;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      transition: all 0.3s ease;
+      background: linear-gradient(to right, #ffefba, #ffffff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 25px 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    
+    button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+      z-index: -1;
+    }
+    
+    button:hover:before {
+      left: 100%;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    #enable-btn {
+      background: linear-gradient(45deg, #3498db, #2980b9);
+      color: white;
+    }
+    
+    #calibrate-btn {
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+      color: white;
+    }
+    
+    .compass-container {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      margin: 20px auto;
+      perspective: 1000px;
+    }
+    
+    .compass {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 8px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      box-shadow: 
+        0 0 30px rgba(0, 0, 0, 0.6),
+        inset 0 0 30px rgba(0, 0, 0, 0.3),
+        0 0 0 2px rgba(255, 255, 255, 0.1);
+      background: radial-gradient(circle, #2c3e50, #1a1a2e);
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease-out;
+    }
+    
+    .compass-face {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border-radius: 50%;
+      transform-style: preserve-3d;
+    }
+    
+    .modern-needle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 15;
+    }
+    
+    .needle-north {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 110px solid #e74c3c;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateY(-50px);
+      filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.7));
+      z-index: 16;
+    }
+    
+    .needle-south {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 90px solid #3498db;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateY(40px);
+      filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.7));
+      z-index: 16;
+    }
+    
+    .needle-east {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 90px solid #2ecc71;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateX(40px);
+      filter: drop-shadow(0 0 5px rgba(46, 204, 113, 0.7));
+      z-index: 15;
+    }
+    
+    .needle-west {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 90px solid #f39c12;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateX(-40px);
+      filter: drop-shadow(0 0 5px rgba(243, 156, 18, 0.7));
+      z-index: 15;
+    }
+    
+    .needle-center {
+      width: 25px;
+      height: 25px;
+      background: radial-gradient(circle, #ffffff, #cccccc);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      box-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        inset 0 0 5px rgba(0, 0, 0, 0.5);
+      border: 2px solid #333;
+    }
+    
+    .needle-shadow {
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      top: -10%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 14;
+      pointer-events: none;
+    }
+    
+    /* Needle Labels (N, S, E, W) */
+    .needle-label {
+      position: absolute;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+      z-index: 17;
+      font-size: 1em;
+    }
 
-.needle-label.north {  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -250%);  
-}  
+    .needle-label.north {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -200%);
+    }
 
-.needle-label.south {  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, 150%);  
-}  
+    .needle-label.south {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 120%);
+    }
 
-.needle-label.east {  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(250%, -50%);  
-}  
+    .needle-label.east {
+      top: 50%;
+      left: 50%;
+      transform: translate(200%, -50%);
+    }
 
-.needle-label.west {  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-250%, -50%);  
-}  
-  
-.direction-markers {  
-  position: absolute;  
-  width: 100%;  
-  height: 100%;  
-  top: 0;  
-  left: 0;  
-}  
-  
-.marker {  
-  position: absolute;  
-  width: 2px;  
-  height: 15px;  
-  background-color: rgba(255, 255, 255, 0.7);  
-  left: 50%;  
-  margin-left: -1px;  
-  transform-origin: 50% 150px;  
-}  
-  
-.cardinal {  
-  font-weight: bold;  
-  position: absolute;  
-  color: white;  
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);  
-  transform-origin: 50% 140px;  
-  font-size: 1.2em;  
-}  
-  
-.degree-readout {  
-  position: absolute;  
-  bottom: -50px;  
-  left: 0;  
-  right: 0;  
-  font-size: 1.4em;  
-  font-weight: bold;  
-  color: white;  
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);  
-  background: rgba(0, 0, 0, 0.3);  
-  padding: 8px;  
-  border-radius: 20px;  
-  margin: 0 auto;  
-  width: 120px;  
-  transition: all 0.3s ease;  
-}  
-  
-#calibration-message {  
-  color: #f1c40f;  
-  font-weight: bold;  
-  margin: 15px 0;  
-  font-size: 1.1em;  
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);  
-  min-height: 40px;  
-  display: flex;  
-  align-items: center;  
-  justify-content: center;  
-  transition: all 0.3s ease;  
-  text-align: center;  
-}  
-  
-.compass-glow {  
-  position: absolute;  
-  width: 100%;  
-  height: 100%;  
-  border-radius: 50%;  
-  box-shadow: 0 0 30px rgba(66, 165, 245, 0.5);  
-  opacity: 0;  
-  transition: opacity 0.5s ease;  
-  pointer-events: none;  
-}  
-  
-.active-glow {  
-  opacity: 1;  
-}  
-  
-.compass-ring {  
-  position: absolute;  
-  width: 110%;  
-  height: 110%;  
-  top: -5%;  
-  left: -5%;  
-  border: 2px solid rgba(255, 255, 255, 0.1);  
-  border-radius: 50%;  
-  box-shadow:   
-    inset 0 0 20px rgba(255, 255, 255, 0.1),  
-    0 0 20px rgba(255, 255, 255, 0.1);  
-  pointer-events: none;  
-}  
-  
-.compass-ring:nth-child(1) {  
-  width: 120%;  
-  height: 120%;  
-  top: -10%;  
-  left: -10%;  
-  border-width: 1px;  
-}  
-  
-.compass-ring:nth-child(2) {  
-  width: 130%;  
-  height: 130%;  
-  top: -15%;  
-  left: -15%;  
-  border-width: 1px;  
-  opacity: 0.7;  
-}  
-  
-.accuracy-meter {  
-  width: 80%;  
-  height: 10px;  
-  background: rgba(255, 255, 255, 0.2);  
-  border-radius: 5px;  
-  margin: 20px auto;  
-  overflow: hidden;  
-  position: relative;  
-  max-width: 300px;  
-}  
-  
-.accuracy-bar {  
-  height: 100%;  
-  width: 0;  
-  background: linear-gradient(to right, #ff5252, #ffeb3b, #4caf50);  
-  border-radius: 5px;  
-  transition: width 0.5s ease;  
-}  
-  
-.accuracy-label {  
-  margin-top: 5px;  
-  font-size: 0.9em;  
-  color: rgba(255, 255, 255, 0.8);  
-}  
-  
-.compass-stand {  
-  width: 80px;  
-  height: 20px;  
-  background: linear-gradient(to bottom, #5a3e36, #2c1e17);  
-  margin: -10px auto 0;  
-  border-radius: 5px;  
-  position: relative;  
-  z-index: -1;  
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);  
-}  
-  
-.compass-stand:before {  
-  content: '';  
-  position: absolute;  
-  width: 40px;  
-  height: 40px;  
-  background: linear-gradient(to bottom, #3e2723, #1b0000);  
-  border-radius: 50%;  
-  bottom: -20px;  
-  left: calc(50% - 20px);  
-}  
-  
-@keyframes pulse {  
-  0% { transform: scale(1); opacity: 0.7; }  
-  50% { transform: scale(1.05); opacity: 1; }  
-  100% { transform: scale(1); opacity: 0.7; }  
-}  
-  
-@keyframes fadeIn {  
-  from { opacity: 0; transform: translateY(20px); }  
-  to { opacity: 1; transform: translateY(0); }  
-}
-
-  </style>  
-</head>  
-<body>  
-<div><a href="index.html" style="text-decoration: none;color:white;background-color: royalblue;border-radius:50%;padding:5px; height:40px;width:40px; position:fixed;top:20px;right:20px; text-align: center;vertical-align: center;font-size: 25px;">&#8962;</a></div>
-  <div class="container">  
-    <h1>Dynamic Compass</h1>  
-    <div id="direction">Waiting...</div>  <div class="compass-container">  
-  <div class="compass-glow" id="compass-glow"></div>  
-  <div class="compass">  
-    <div class="compass-ring"></div>  
-    <div class="compass-ring"></div>  
-    <div class="compass-ring"></div>  
+    .needle-label.west {
+      top: 50%;
+      left: 50%;
+      transform: translate(-200%, -50%);
+    }
+    
+    .direction-markers {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+    
+    .marker {
+      position: absolute;
+      width: 2px;
+      height: 12px;
+      background-color: rgba(255, 255, 255, 0.7);
+      left: 50%;
+      margin-left: -1px;
+      transform-origin: 50% 125px;
+    }
+    
+    .cardinal {
+      font-weight: bold;
+      position: absolute;
+      color: white;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+      transform-origin: 50% 110px;
+      font-size: 1em;
+    }
+    
+    .degree-readout {
+      position: absolute;
+      bottom: -40px;
+      left: 0;
+      right: 0;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px;
+      border-radius: 15px;
+      margin: 0 auto;
+      width: 100px;
+      transition: all 0.3s ease;
+    }
+    
+    #calibration-message {
+      color: #f1c40f;
+      font-weight: bold;
+      margin: 15px 0;
+      font-size: 0.9em;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      text-align: center;
+      padding: 0 10px;
+    }
+    
+    .compass-glow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(66, 165, 245, 0.5);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    
+    .active-glow {
+      opacity: 1;
+    }
+    
+    .compass-ring {
+      position: absolute;
+      width: 110%;
+      height: 110%;
+      top: -5%;
+      left: -5%;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      box-shadow: 
+        inset 0 0 20px rgba(255, 255, 255, 0.1),
+        0 0 20px rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+    }
+    
+    .compass-ring:nth-child(1) {
+      width: 120%;
+      height: 120%;
+      top: -10%;
+      left: -10%;
+      border-width: 1px;
+    }
+    
+    .compass-ring:nth-child(2) {
+      width: 130%;
+      height: 130%;
+      top: -15%;
+      left: -15%;
+      border-width: 1px;
+      opacity: 0.7;
+    }
+    
+    .accuracy-meter {
+      width: 80%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      margin: 15px auto;
+      overflow: hidden;
+      position: relative;
+      max-width: 250px;
+    }
+    
+    .accuracy-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(to right, #ff5252, #ffeb3b, #4caf50);
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+    
+    .accuracy-label {
+      margin-top: 5px;
+      font-size: 0.8em;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .compass-stand {
+      width: 60px;
+      height: 15px;
+      background: linear-gradient(to bottom, #5a3e36, #2c1e17);
+      margin: -8px auto 0;
+      border-radius: 5px;
+      position: relative;
+      z-index: -1;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .compass-stand:before {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(to bottom, #3e2723, #1b0000);
+      border-radius: 50%;
+      bottom: -15px;
+      left: calc(50% - 15px);
+    }
+    
+    .home-button {
+      text-decoration: none;
+      color: white;
+      background-color: royalblue;
+      border-radius: 50%;
+      padding: 10px;
+      height: 40px;
+      width: 40px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .home-button:hover {
+      transform: scale(1.1);
+      background-color: #4169E1;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+      .compass-container {
+        width: 300px;
+        height: 300px;
+      }
       
-    <div class="compass-face">  
-      <div class="modern-needle" id="modern-needle">  
-        <div class="needle-shadow"></div>  
-        <div class="needle-north"></div>  
-        <div class="needle-south"></div>  
-        <div class="needle-east"></div>  
-        <div class="needle-west"></div>  
-        <div class="needle-center"></div>  
+      h1 {
+        font-size: 2.5rem;
+      }
+      
+      #direction {
+        font-size: 2rem;
+      }
+      
+      button {
+        padding: 12px 25px;
+        font-size: 1rem;
+      }
+      
+      .compass-stand {
+        width: 80px;
+        height: 20px;
+        margin: -10px auto 0;
+      }
+      
+      .compass-stand:before {
+        width: 40px;
+        height: 40px;
+        bottom: -20px;
+        left: calc(50% - 20px);
+      }
+      
+      .needle-north {
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 140px solid #e74c3c;
+        transform: translate(-50%, -50%) translateY(-60px);
+      }
+      
+      .needle-south {
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 110px solid #3498db;
+        transform: translate(-50%, -50%) translateY(50px);
+      }
+      
+      .needle-east {
+        border-top: 12px solid transparent;
+        border-bottom: 12px solid transparent;
+        border-left: 110px solid #2ecc71;
+        transform: translate(-50%, -50%) translateX(50px);
+      }
+      
+      .needle-west {
+        border-top: 12px solid transparent;
+        border-bottom: 12px solid transparent;
+        border-right: 110px solid #f39c12;
+        transform: translate(-50%, -50%) translateX(-50px);
+      }
+      
+      .needle-center {
+        width: 30px;
+        height: 30px;
+      }
+      
+      .needle-label {
+        font-size: 1.2em;
+      }
+      
+      .needle-label.north {
+        transform: translate(-50%, -250%);
+      }
+      
+      .needle-label.south {
+        transform: translate(-50%, 150%);
+      }
+      
+      .needle-label.east {
+        transform: translate(250%, -50%);
+      }
+      
+      .needle-label.west {
+        transform: translate(-250%, -50%);
+      }
+      
+      .marker {
+        height: 15px;
+        transform-origin: 50% 150px;
+      }
+      
+      .cardinal {
+        font-size: 1.2em;
+        transform-origin: 50% 140px;
+      }
+      
+      .degree-readout {
+        font-size: 1.4em;
+        bottom: -50px;
+        width: 120px;
+      }
+      
+      #calibration-message {
+        font-size: 1.1em;
+        min-height: 40px;
+      }
+      
+      .accuracy-meter {
+        height: 10px;
+        margin: 20px auto;
+        max-width: 300px;
+      }
+      
+      .accuracy-label {
+        font-size: 0.9em;
+      }
+    }
+    
+    @media (max-height: 600px) {
+      .compass-container {
+        width: 200px;
+        height: 200px;
+        margin: 10px auto;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+      }
+      
+      #direction {
+        font-size: 1.2rem;
+        margin: 10px 0;
+      }
+      
+      .button-group {
+        margin: 15px 0;
+      }
+      
+      .needle-north {
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 90px solid #e74c3c;
+        transform: translate(-50%, -50%) translateY(-40px);
+      }
+      
+      .needle-south {
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 70px solid #3498db;
+        transform: translate(-50%, -50%) translateY(30px);
+      }
+      
+      .needle-east {
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-left: 70px solid #2ecc71;
+        transform: translate(-50%, -50%) translateX(30px);
+      }
+      
+      .needle-west {
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 70px solid #f39c12;
+        transform: translate(-50%, -50%) translateX(-30px);
+      }
+      
+      .needle-center {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .marker {
+        height: 10px;
+        transform-origin: 50% 100px;
+      }
+      
+      .cardinal {
+        font-size: 0.9em;
+        transform-origin: 50% 90px;
+      }
+      
+      .degree-readout {
+        font-size: 1em;
+        bottom: -30px;
+        width: 90px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="home-button">⌂</a>
+  
+  <div class="container">
+    <h1>Dynamic Compass</h1>
+    <div id="direction">Waiting...</div>
+    <div class="compass-container">
+      <div class="compass-glow" id="compass-glow"></div>
+      <div class="compass">
+        <div class="compass-ring"></div>
+        <div class="compass-ring"></div>
+        <div class="compass-ring"></div>
+        
+        <div class="compass-face">
+          <div class="modern-needle" id="modern-needle">
+            <div class="needle-shadow"></div>
+            <div class="needle-north"></div>
+            <div class="needle-south"></div>
+            <div class="needle-east"></div>
+            <div class="needle-west"></div>
+            <div class="needle-center"></div>
+            
+            <!-- Needle Direction Labels -->
+            <div class="needle-label north">N</div>
+            <div class="needle-label south">S</div>
+            <div class="needle-label east">E</div>
+            <div class="needle-label west">W</div>
+          </div>
           
-        <!-- Needle Direction Labels -->  
-        <div class="needle-label north">N</div>  
-        <div class="needle-label south">S</div>  
-        <div class="needle-label east">E</div>  
-        <div class="needle-label west">W</div>  
-      </div>  
-        
-      <div class="direction-markers" id="markers"></div>  
-    </div>  
-  </div>  
-  <div class="degree-readout" id="degree-readout">0° N</div>  
-</div>  
-  
-<div class="compass-stand"></div>  
-  
-<div class="accuracy-meter">  
-  <div class="accuracy-bar" id="accuracy-bar"></div>  
-  <div class="accuracy-label">Accuracy: <span id="accuracy-value">0%</span></div>  
-</div>  
-  
-<div id="calibration-message"></div>  
-  
-<div class="button-group">  
-  <button id="enable-btn" onclick="getPermission()">Enable Compass</button>  
-  <button id="calibrate-btn" onclick="calibrateCompass()">Calibrate</button>  
-</div>
+          <div class="direction-markers" id="markers"></div>
+        </div>
+      </div>
+      <div class="degree-readout" id="degree-readout">0° N</div>
+    </div>
+    
+    <div class="compass-stand"></div>
+    
+    <div class="accuracy-meter">
+      <div class="accuracy-bar" id="accuracy-bar"></div>
+      <div class="accuracy-label">Accuracy: <span id="accuracy-value">0%</span></div>
+    </div>
+    
+    <div id="calibration-message"></div>
+    
+    <div class="button-group">
+      <button id="enable-btn" onclick="getPermission()">Enable Compass</button>
+      <button id="calibrate-btn" onclick="calibrateCompass()">Calibrate</button>
+    </div>
+  </div>
 
-  </div>    <script>  
-    let compassEnabled = false;  
-    let calibrationCount = 0;  
-    let lastHeading = 0;  
-    let smoothHeading = 0;  
-    let previousRawAngle = 0;  
-    let rotationCount = 0;  
-    const smoothingFactor = 0.15;  
-    let accuracy = 0;  
-    let particles = [];  
-  
-    // Create direction markers (only N, NE, E, SE, S, SW, W, NW)  
-    const markersContainer = document.getElementById('markers');  
-    const cardinalDirections = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];  
-  
-    // Create marker lines  
-    for (let i = 0; i < 360; i += 5) {  
-      const marker = document.createElement('div');  
-      marker.className = 'marker';  
-      marker.style.transform = `rotate(${i}deg)`;  
+  <script>
+    let compassEnabled = false;
+    let calibrationCount = 0;
+    let lastHeading = 0;
+    let smoothHeading = 0;
+    let previousRawAngle = 0;
+    let rotationCount = 0;
+    const smoothingFactor = 0.15;
+    let accuracy = 0;
+    let particles = [];
+    let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    // Create direction markers (only N, NE, E, SE, S, SW, W, NW)
+    const markersContainer = document.getElementById('markers');
+    const cardinalDirections = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    
+    // Create marker lines
+    for (let i = 0; i < 360; i += 5) {
+      const marker = document.createElement('div');
+      marker.className = 'marker';
+      marker.style.transform = `rotate(${i}deg)`;
         
-      // Make 45-degree markers slightly longer  
-      if (i % 45 === 0) {  
-        marker.style.height = '25px';  
-        marker.style.background = 'rgba(255, 255, 255, 0.9)';  
-      } else if (i % 15 === 0) {  
-        marker.style.height = '18px';  
-      }  
+      // Make 45-degree markers slightly longer
+      if (i % 45 === 0) {
+        marker.style.height = '20px';
+        marker.style.background = 'rgba(255, 255, 255, 0.9)';
+      } else if (i % 15 === 0) {
+        marker.style.height = '15px';
+      }
         
-      markersContainer.appendChild(marker);  
-    }  
-  
-    // Create only main cardinal direction labels  
-    cardinalDirections.forEach((dir, index) => {  
-      const angle = index * 45;  
-      const label = document.createElement('div');  
-      label.className = 'cardinal';  
-      label.textContent = dir;  
+      markersContainer.appendChild(marker);
+    }
+    
+    // Create only main cardinal direction labels
+    cardinalDirections.forEach((dir, index) => {
+      const angle = index * 45;
+      const label = document.createElement('div');
+      label.className = 'cardinal';
+      label.textContent = dir;
         
-      const radius = 120;  
-      const x = Math.sin(angle * Math.PI / 180) * radius;  
-      const y = -Math.cos(angle * Math.PI / 180) * radius;  
+      const radius = 100;
+      const x = Math.sin(angle * Math.PI / 180) * radius;
+      const y = -Math.cos(angle * Math.PI / 180) * radius;
         
-      label.style.left = `calc(50% + ${x}px)`;  
-      label.style.top = `calc(50% + ${y}px)`;  
+      label.style.left = `calc(50% + ${x}px)`;
+      label.style.top = `calc(50% + ${y}px)`;
         
-      markersContainer.appendChild(label);  
-    });  
-  
-    function getPermission() {  
-      if (compassEnabled) return;  
+      markersContainer.appendChild(label);
+    });
+    
+    function getPermission() {
+      if (compassEnabled) return;
         
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {  
-        DeviceOrientationEvent.requestPermission()  
-          .then(response => {  
-            if (response === 'granted') {  
-              window.addEventListener("deviceorientationabsolute", handleOrientation, true);  
-              enableCompass();  
-            } else {  
-              alert("Compass permission is required for this app to work.");  
-            }  
-          })  
-          .catch(console.error);  
-      } else {  
-        // Try absolute orientation first, fallback to relative  
-        if ('ondeviceorientationabsolute' in window) {  
-          window.addEventListener("deviceorientationabsolute", handleOrientation, true);  
-        } else {  
-          window.addEventListener("deviceorientation", handleOrientation, true);  
-        }  
-        enableCompass();  
-      }  
-    }  
-  
-    function enableCompass() {  
-      compassEnabled = true;  
-      document.getElementById('enable-btn').textContent = "Compass Active";  
-      document.getElementById('enable-btn').style.background = "linear-gradient(45deg, #9b59b6, #8e44ad)";  
-      document.getElementById('compass-glow').classList.add('active-glow');  
-      document.getElementById('calibration-message').textContent = "Move your device in a figure-8 motion to calibrate";  
+      // iOS 13+ devices need to request permission
+      if (isIOS && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              window.addEventListener("deviceorientation", handleOrientation, true);
+              enableCompass();
+            } else {
+              alert("Compass permission is required for this app to work.");
+            }
+          })
+          .catch(console.error);
+      } else {
+        // For other devices, try to listen directly
+        try {
+          window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+          enableCompass();
+        } catch (e) {
+          // Fallback to regular deviceorientation if absolute isn't available
+          window.addEventListener("deviceorientation", handleOrientation, true);
+          enableCompass();
+        }
+      }
+    }
+    
+    function enableCompass() {
+      compassEnabled = true;
+      document.getElementById('enable-btn').textContent = "Compass Active";
+      document.getElementById('enable-btn').style.background = "linear-gradient(45deg, #9b59b6, #8e44ad)";
+      document.getElementById('compass-glow').classList.add('active-glow');
+      document.getElementById('calibration-message').textContent = "Move your device in a figure-8 motion to calibrate";
         
-      // Start accuracy simulation  
-      simulateAccuracyImprovement();  
-    }  
-  
-    function calibrateCompass() {  
-      calibrationCount++;  
-      accuracy = Math.min(100, accuracy + 30);  
-      updateAccuracyDisplay();  
+      // Start accuracy simulation
+      simulateAccuracyImprovement();
+    }
+    
+    function calibrateCompass() {
+      if (!compassEnabled) {
+        alert("Please enable the compass first");
+        return;
+      }
+      
+      calibrationCount++;
+      accuracy = Math.min(100, accuracy + 30);
+      updateAccuracyDisplay();
         
-      document.getElementById('calibration-message').textContent =   
-        `Calibrating (${calibrationCount}/3)... Move device in figure-8`;  
+      document.getElementById('calibration-message').textContent = 
+        `Calibrating (${calibrationCount}/3)... Move device in figure-8`;
         
-      // Add visual feedback  
-      const compass = document.querySelector('.compass');  
-      compass.style.animation = 'pulse 0.5s ease';  
-      setTimeout(() => {  
-        compass.style.animation = '';  
-      }, 500);  
+      // Add visual feedback
+      const compass = document.querySelector('.compass');
+      compass.style.animation = 'pulse 0.5s ease';
+      setTimeout(() => {
+        compass.style.animation = '';
+      }, 500);
         
-      setTimeout(() => {  
-        if (calibrationCount >= 3) {  
-          document.getElementById('calibration-message').textContent = "Calibration complete!";  
-          document.getElementById('calibration-message').style.color = "#2ecc71";  
-        } else {  
-          document.getElementById('calibration-message').textContent = "Keep moving to calibrate";  
-        }  
-      }, 2000);  
-    }  
-  
-    function simulateAccuracyImprovement() {  
-      if (!compassEnabled) return;  
+      setTimeout(() => {
+        if (calibrationCount >= 3) {
+          document.getElementById('calibration-message').textContent = "Calibration complete!";
+          document.getElementById('calibration-message').style.color = "#2ecc71";
+        } else {
+          document.getElementById('calibration-message').textContent = "Keep moving to calibrate";
+        }
+      }, 2000);
+    }
+    
+    function simulateAccuracyImprovement() {
+      if (!compassEnabled) return;
         
-      // Gradually improve accuracy up to 95%  
-      if (accuracy < 95) {  
-        accuracy = Math.min(95, accuracy + 0.5);  
-        updateAccuracyDisplay();  
-      }  
+      // Gradually improve accuracy up to 95%
+      if (accuracy < 95) {
+        accuracy = Math.min(95, accuracy + 0.5);
+        updateAccuracyDisplay();
+      }
         
-      // Random small fluctuations  
-      if (Math.random() > 0.7) {  
-        accuracy = Math.max(80, accuracy - (Math.random() * 5));  
-        updateAccuracyDisplay();  
-      }  
+      // Random small fluctuations
+      if (Math.random() > 0.7) {
+        accuracy = Math.max(80, accuracy - (Math.random() * 5));
+        updateAccuracyDisplay();
+      }
         
-      setTimeout(simulateAccuracyImprovement, 1000);  
-    }  
-  
-    function updateAccuracyDisplay() {  
-      document.getElementById('accuracy-bar').style.width = `${accuracy}%`;  
-      document.getElementById('accuracy-value').textContent = `${Math.round(accuracy)}%`;  
+      setTimeout(simulateAccuracyImprovement, 1000);
+    }
+    
+    function updateAccuracyDisplay() {
+      document.getElementById('accuracy-bar').style.width = `${accuracy}%`;
+      document.getElementById('accuracy-value').textContent = `${Math.round(accuracy)}%`;
         
-      // Change color based on accuracy  
-      if (accuracy > 80) {  
-        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #a5d6a7, #2ecc71)";  
-      } else if (accuracy > 60) {  
-        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #fff59d, #f1c40f)";  
-      } else {  
-        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #ef9a9a, #e74c3c)";  
-      }  
-    }  
-  
-    function handleOrientation(event) {  
-      if (event.alpha === null) {  
-        document.getElementById("direction").textContent = "No data";  
-        document.getElementById("degree-readout").textContent = "No data";  
-        return;  
-      }  
+      // Change color based on accuracy
+      if (accuracy > 80) {
+        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #a5d6a7, #2ecc71)";
+      } else if (accuracy > 60) {
+        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #fff59d, #f1c40f)";
+      } else {
+        document.getElementById('accuracy-bar').style.background = "linear-gradient(to right, #ef9a9a, #e74c3c)";
+      }
+    }
+    
+    function handleOrientation(event) {
+      if (event.alpha === null) {
+        document.getElementById("direction").textContent = "No data";
+        document.getElementById("degree-readout").textContent = "No data";
+        return;
+      }
         
-      // Use absolute orientation if available  
-      let heading = event.webkitCompassHeading ||   
-                   (event.absolute ? event.alpha : calculateHeading(event));  
+      // Use absolute orientation if available
+      let heading = event.webkitCompassHeading || 
+                   (event.absolute ? event.alpha : calculateHeading(event));
+      
+      if (heading === undefined || heading === null) {
+        heading = event.alpha; // Fallback for some Android devices
+      }
         
-      // Normalize to 0-360 first  
-      let rawAngle = 360 - heading;  
-      rawAngle = ((rawAngle % 360) + 360) % 360;  
-  
-      // Handle angle wrapping  
-      let angleDiff = rawAngle - previousRawAngle;  
-      if (angleDiff > 180) {  
-        rotationCount--;  
-      } else if (angleDiff < -180) {  
-        rotationCount++;  
-      }  
-      previousRawAngle = rawAngle;  
-  
-      // Calculate the unwrapped angle  
-      let unwrappedAngle = rawAngle + (rotationCount * 360);  
+      // Normalize to 0-360 first
+      let rawAngle = 360 - heading;
+      rawAngle = ((rawAngle % 360) + 360) % 360;
+    
+      // Handle angle wrapping
+      let angleDiff = rawAngle - previousRawAngle;
+      if (angleDiff > 180) {
+        rotationCount--;
+      } else if (angleDiff < -180) {
+        rotationCount++;
+      }
+      previousRawAngle = rawAngle;
+    
+      // Calculate the unwrapped angle
+      let unwrappedAngle = rawAngle + (rotationCount * 360);
         
-      // Apply smoothing  
-      smoothHeading = smoothHeading * (1 - smoothingFactor) + unwrappedAngle * smoothingFactor;  
+      // Apply smoothing
+      smoothHeading = smoothHeading * (1 - smoothingFactor) + unwrappedAngle * smoothingFactor;
         
-      // Convert back to 0-360 range for display  
-      let displayAngle = ((smoothHeading % 360) + 360) % 360;  
-  
-      // Snap near-North to 0° for display  
-      let roundedDisplayAngle = Math.round(displayAngle);  
-      if (roundedDisplayAngle >= 359 || roundedDisplayAngle <= 5) {  
-        roundedDisplayAngle = 0;  
-      }  
-  
-      const label = getDirectionLabel(roundedDisplayAngle);  
-  
-      document.getElementById("direction").textContent = `${label} (${roundedDisplayAngle}°)`;  
-      document.getElementById("degree-readout").textContent = `${roundedDisplayAngle}° ${label}`;  
+      // Convert back to 0-360 range for display
+      let displayAngle = ((smoothHeading % 360) + 360) % 360;
+    
+      // Snap near-North to 0° for display
+      let roundedDisplayAngle = Math.round(displayAngle);
+      if (roundedDisplayAngle >= 359 || roundedDisplayAngle <= 5) {
+        roundedDisplayAngle = 0;
+      }
+    
+      const label = getDirectionLabel(roundedDisplayAngle);
+    
+      document.getElementById("direction").textContent = `${label} (${roundedDisplayAngle}°)`;
+      document.getElementById("degree-readout").textContent = `${roundedDisplayAngle}° ${label}`;
         
-      // Rotate the modern needle (in opposite direction)  
-      document.getElementById("modern-needle").style.transform = `rotate(${-smoothHeading}deg)`;  
+      // Rotate the modern needle (in opposite direction)
+      document.getElementById("modern-needle").style.transform = `rotate(${-smoothHeading}deg)`;
         
-      // Update accuracy slightly based on movement  
-      if (Math.abs(angleDiff) > 0.1 && accuracy < 100) {  
-        accuracy = Math.min(100, accuracy + 0.1);  
-        updateAccuracyDisplay();  
-      }  
-    }  
-  
-    function calculateHeading(event) {  
-      // Fallback calculation for devices that don't provide absolute orientation  
-      return event.alpha;  
-    }  
-  
-    function getDirectionLabel(angle) {  
-      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];  
-      return directions[Math.round(angle / 45) % 8];  
-    }  
-  </script>  </body>  
-</html>  
+      // Update accuracy slightly based on movement
+      if (Math.abs(angleDiff) > 0.1 && accuracy < 100) {
+        accuracy = Math.min(100, accuracy + 0.1);
+        updateAccuracyDisplay();
+      }
+    }
+    
+    function calculateHeading(event) {
+      // Fallback calculation for devices that don't provide absolute orientation
+      if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
+        // Convert degrees to radians
+        const alpha = event.alpha * (Math.PI / 180);
+        const beta = event.beta * (Math.PI / 180);
+        const gamma = event.gamma * (Math.PI / 180);
+        
+        // Calculate Euler angles
+        const cBeta = Math.cos(beta);
+        const cGamma = Math.cos(gamma);
+        const sBeta = Math.sin(beta);
+        const sGamma = Math.sin(gamma);
+        const sAlpha = Math.sin(alpha);
+        const cAlpha = Math.cos(alpha);
+        
+        // Calculate heading
+        const heading = Math.atan2(-sGamma * sAlpha + sBeta * cGamma * cAlpha, 
+                                  sBeta * sGamma * sAlpha + cGamma * cAlpha);
+        
+        // Convert back to degrees and normalize
+        return ((heading * (180 / Math.PI)) + 360) % 360;
+      }
+      return event.alpha;
+    }
+    
+    function getDirectionLabel(angle) {
+      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      return directions[Math.round(angle / 45) % 8];
+    }
+    
+    // Check if device orientation is supported
+    if (!window.DeviceOrientationEvent) {
+      document.getElementById("direction").textContent = "Compass not supported";
+      document.getElementById("enable-btn").disabled = true;
+      document.getElementById("calibrate-btn").disabled = true;
+      document.getElementById("calibration-message").textContent = "Your device doesn't support compass functionality";
+    } else if ('ondeviceorientationabsolute' in window || 
+               'ondeviceorientation' in window || 
+               (isIOS && 'DeviceOrientationEvent' in window)) {
+      // Show that compass can be enabled
+      document.getElementById("direction").textContent = "Tap 'Enable Compass'";
+    } else {
+      document.getElementById("direction").textContent = "Compass not available";
+      document.getElementById("enable-btn").disabled = true;
+    }
+  </script>
+</body>
+</html>
