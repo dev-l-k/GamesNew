@@ -1407,8 +1407,9 @@
       
       gameCards.forEach(card => {
         const title = card.querySelector('.box').getAttribute('data-title') || 
-                      card.querySelector('h3').textContent.toLowerCase();
-        const matches = title.includes(searchTerm);
+              card.querySelector('h3').textContent.toLowerCase();
+const description = card.querySelector('h5').textContent.toLowerCase();
+const matches = title.includes(searchTerm) || description.includes(searchTerm);
         
         card.style.display = matches ? 'flex' : 'none';
         if (matches) {
