@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Odd or Even Cricket</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #ffffff;
+      text-align: center;
+      padding: 2rem;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      background: linear-gradient(to right, #ff6bd6, #58d0fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    #phase {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+      color: #8fbcff;
+      font-weight: 600;
+    }
+
+    button {
+      margin: 8px;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      border: none;
+      background: linear-gradient(145deg, #7f5af0, #2cb67d);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      background: linear-gradient(145deg, #8f6bf6, #3bc68d);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .log {
+      margin-top: 1.5rem;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #cad3ff;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 15px;
+      background: rgba(30, 45, 89, 0.4);
+      border-radius: 10px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    #score {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 1.5rem 0;
+      background: linear-gradient(90deg, #25d0ab, #58d0fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulse 1.5s infinite;
+      padding: 0 20px;
+    }
+
+    #to-win {
+      font-size: 1.5rem;
+      color: #ffd700;
+      margin: 15px 0;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    #reset-btn {
+      margin-top: 2.5rem;
+      display: none;
+    }
+
+    #reset-btn button {
+      padding: 12px 40px;
+      background: linear-gradient(145deg, #ff3860, #ff6bd6);
+      font-size: 1.2rem;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(22, 33, 64, 0.95);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 4rem;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #outOverlay {
+      color: #ff3860;
+      font-size: 5rem;
+      font-weight: bold;
+      text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    #tossOverlay {
+      font-size: 2.4rem;
+      text-align: center;
+      padding: 30px;
+      max-width: 80%;
+      line-height: 1.4;
+    }
+
+    .winner {
+      font-size: 3.5rem;
+      background: linear-gradient(45deg, #25d0ab, #ff6bd6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: scalePop 1s ease;
+      font-weight: 800;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    @keyframes scalePop {
+      0% { transform: scale(0.2); opacity: 0; }
+      60% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    #buttons {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 20px;
+    }
+
+    #buttons button {
+      min-width: 60px;
+      padding: 12px 0;
+      font-size: 1.2rem;
+    }
+
+    /* Floating animation for cricket ball */
+    .cricket-ball {
+      font-size: 28px;
+      margin-bottom: 15px;
+      animation: float 2s ease-in-out infinite;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div><a href="index.html" style="text-decoration: none;color:white;background-color: royalblue;border-radius:50%;padding:5px; height:40px;width:40px; position:fixed;top:20px;left:20px; text-align: center;vertical-align: center;font-size: 25px;z-index: 101;">&#8962;</a></div>
+  <div class="cricket-ball">🏏</div>
+  <h1>Odd or Even Cricket</h1>
+  <h2 id="phase">Toss: Choose Odd or Even</h2>
+
+  <div id="toss-options">
+    <button onclick="chooseToss('odd')">Odd</button>
+    <button onclick="chooseToss('even')">Even</button>
+  </div>
+
+  <div id="number-options"></div>
+  <div id="batbowl-choice"></div>
+  <div id="buttons"></div>
+  <div class="log" id="log"></div>
+  <div class="log" id="score"></div>
+  <div class="log" id="to-win"></div>
+  <div id="reset-btn">
+    <button onclick="resetGame()">🔄 Restart Game</button>
+  </div>
+
+  <div id="outOverlay" class="overlay">OUT!</div>
+  <div id="tossOverlay" class="overlay"></div>
+  <div id="winnerOverlay" class="overlay">
+    <span class="winner" id="winnerText"></span>
+    <button id="playAgainBtn" onclick="resetGame()" style="margin-top: 20px; padding: 10px 20px; font-size: 1.2rem; background: linear-gradient(145deg, #ff3860, #ff6bd6); color: white; border: none; border-radius: 8px; cursor: pointer;">Play Again</button>
+  </div>
+
+  <script>
+    const log = document.getElementById("log");
+    const scoreDiv = document.getElementById("score");
+    const phaseText = document.getElementById("phase");
+    const tossOptions = document.getElementById("toss-options");
+    const numberOptions = document.getElementById("number-options");
+    const batbowlChoice = document.getElementById("batbowl-choice");
+    const playButtons = document.getElementById("buttons");
+    const resetBtn = document.getElementById("reset-btn");
+    const toWinDiv = document.getElementById("to-win");
+
+    const outOverlay = document.getElementById("outOverlay");
+    const tossOverlay = document.getElementById("tossOverlay");
+    const winnerOverlay = document.getElementById("winnerOverlay");
+    const winnerText = document.getElementById("winnerText");
+
+    let playerScore, aiScore, isPlayerBatting, gameOver, innings, tossChoice, target;
+
+    function initGame() {
+      playerScore = 0;
+      aiScore = 0;
+      isPlayerBatting = true;
+      gameOver = false;
+      innings = 1;
+      tossChoice = "";
+      target = 0;
+
+      tossOptions.style.display = "block";
+      numberOptions.innerHTML = "";
+      batbowlChoice.innerHTML = "";
+      playButtons.innerHTML = "";
+      log.innerHTML = "";
+      scoreDiv.innerHTML = "";
+      toWinDiv.innerHTML = "";
+      resetBtn.style.display = "none";
+      phaseText.innerText = "Toss: Choose Odd or Even";
+
+      hideOverlays();
+    }
+
+    function showOverlay(el, message = "", duration = 1500) {
+      if (message) el.innerHTML = message;
+      el.classList.add("show");
+      setTimeout(() => {
+        el.classList.remove("show");
+        if (el === outOverlay) el.innerHTML = "OUT!";
+      }, duration);
+    }
+
+    function hideOverlays() {
+      outOverlay.classList.remove("show");
+      tossOverlay.classList.remove("show");
+      winnerOverlay.classList.remove("show");
+    }
+
+    function chooseToss(choice) {
+      tossChoice = choice;
+      tossOptions.style.display = "none";
+      phaseText.innerText = "Pick a number (0–10)";
+
+      for (let i = 0; i <= 10; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.onclick = () => tossNumber(i);
+        numberOptions.appendChild(btn);
+      }
+    }
+
+    function tossNumber(playerNum) {
+      numberOptions.innerHTML = "";
+      const aiNum = Math.floor(Math.random() * 11);
+      const sum = playerNum + aiNum;
+      const result = sum % 2 === 0 ? "even" : "odd";
+
+      let message = `You: ${playerNum} | AI: ${aiNum}<br>Total: ${sum} → ${result.toUpperCase()}<br>`;
+
+      if (result === tossChoice) {
+        message += "🎉 You won the toss!";
+        showOverlay(tossOverlay, message);
+        phaseText.innerText = "You won the toss! Choose:";
+        batbowlChoice.innerHTML = `
+          <button onclick="setRole(true)">Bat</button>
+          <button onclick="setRole(false)">Bowl</button>
+        `;
+      } else {
+        const aiDecision = Math.random() < 0.5 ? "bat" : "bowl";
+        isPlayerBatting = aiDecision === "bowl";
+        message += `🤖 AI won and chose to ${aiDecision}`;
+        showOverlay(tossOverlay, message);
+        phaseText.innerText = `AI chose to ${aiDecision}`;
+        setTimeout(startGame, 2000);
+      }
+    }
+
+    function setRole(playerBatting) {
+      isPlayerBatting = playerBatting;
+      batbowlChoice.innerHTML = "";
+      startGame();
+    }
+
+    function startGame() {
+      phaseText.innerText = isPlayerBatting ? "You're Batting 🏏" : "You're Bowling 🎯";
+      setupPlayButtons();
+    }
+
+    function setupPlayButtons() {
+      playButtons.innerHTML = "";
+      for (let i = 0; i <= 10; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.onclick = () => playTurn(i);
+        playButtons.appendChild(btn);
+      }
+    }
+
+    function playTurn(playerChoice) {
+      if (gameOver) return;
+      const aiChoice = Math.floor(Math.random() * 11);
+      log.innerHTML = `You: ${playerChoice} | AI: ${aiChoice}`;
+
+      if (playerChoice === aiChoice) {
+        let outMessage = "🚫 OUT!";
+        const outTypes = ["clean bowled", "caught at mid-wicket", "run out", "caught at the boundary"];
+        const outType = outTypes[Math.floor(Math.random() * outTypes.length)];
+        outMessage += ` it's ${outType}!`;
+        showOverlay(outOverlay, outMessage, 1500);
+        
+        if (innings === 1) {
+          innings = 2;
+          isPlayerBatting = !isPlayerBatting;
+          target = isPlayerBatting ? aiScore + 1 : playerScore + 1;
+          phaseText.innerText = isPlayerBatting ? "Now You're Batting 🏏" : "Now You're Bowling 🎯";
+        } else {
+          endGame();
+        }
+      } else {
+        if (isPlayerBatting) {
+          playerScore += playerChoice === 0 ? aiChoice : playerChoice;
+          checkMilestone(playerScore);
+        } else {
+          aiScore += aiChoice === 0 ? playerChoice : aiChoice;
+        }
+      }
+
+      if (innings === 2) {
+        const score = isPlayerBatting ? playerScore : aiScore;
+        const remaining = target - score;
+        toWinDiv.innerHTML = remaining > 0 ? `🏏 ${remaining} run(s) to win` : "";
+        if (remaining <= 0) endGame();
+      }
+
+      updateScore();
+    }
+
+    function checkMilestone(score) {
+      if (score === 50) {
+        showOverlay(log, "🎉 Fifty! Well played!", 1500);
+      } else if (score === 100) {
+        showOverlay(log, "🎉 Century! What a performance!", 1500);
+      }
+    }
+
+    function updateScore() {
+      scoreDiv.innerHTML = `👤 You: ${playerScore} &nbsp;&nbsp; 🤖 AI: ${aiScore}`;
+    }
+
+    function endGame() {
+      gameOver = true;
+      playButtons.innerHTML = "";
+      toWinDiv.innerHTML = "";
+      resetBtn.style.display = "block";
+
+      let result = "";
+      if (playerScore > aiScore) result = "🏆 You Win!";
+      else if (playerScore < aiScore) result = "🤖 AI Wins!";
+      else result = "🤝 It's a Draw!";
+
+      winnerText.innerHTML = result;
+      winnerOverlay.classList.add("show");
+    }
+
+    function resetGame() {
+      initGame();
+    }
+
+    initGame();
+  </script>
+</body>
+</html>

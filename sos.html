@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOS Game</title>
+    <style>
+        :root {
+            --primary-light: #3498db;
+            --primary-dark: #2980b9;
+            --secondary-light: #e74c3c;
+            --secondary-dark: #c0392b;
+            --accent-light: #2ecc71;
+            --accent-dark: #27ae60;
+            --text-light: #2c3e50;
+            --text-dark: #ecf0f1;
+            --bg-light: #f5f7fa;
+            --bg-dark: #2c3e50;
+            --cell-bg-light: #ffffff;
+            --cell-bg-dark: #34495e;
+            --border-light: #ddd;
+            --border-dark: #4a5a6b;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-dark: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: clamp(24px, 5vw, 36px);
+            text-shadow: 1px 1px 2px var(--shadow-light);
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top:-10px;
+            right:-200px;
+           
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .dark-mode .theme-toggle {
+            color: var(--text-dark);
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 600px;
+            background: var(--cell-bg-light);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px var(--shadow-light);
+        }
+
+        .dark-mode .game-header {
+            background: var(--cell-bg-dark);
+            box-shadow: 0 4px 15px var(--shadow-dark);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            background: var(--cell-bg-light);
+            color: var(--text-light);
+        }
+
+        .dark-mode input[type="number"] {
+            border-color: var(--border-dark);
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px var(--shadow-light);
+            font-size: 16px;
+        }
+
+        .dark-mode button {
+            box-shadow: 0 3px 6px var(--shadow-dark);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--shadow-light);
+        }
+
+        .dark-mode button:hover {
+            box-shadow: 0 5px 15px var(--shadow-dark);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+            color: white;
+        }
+
+        #reset {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent-dark));
+            color: white;
+        }
+
+        .letter-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .letter-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px var(--shadow-light);
+        }
+
+        .dark-mode .letter-btn {
+            box-shadow: 0 4px 8px var(--shadow-dark);
+        }
+
+        #btnS {
+            background: linear-gradient(135deg, var(--secondary-light), var(--secondary-dark));
+            color: white;
+        }
+
+        #btnO {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+            color: white;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .turn-indicator {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            background: var(--cell-bg-light);
+            box-shadow: 0 3px 6px var(--shadow-light);
+            flex-grow: 1;
+            text-align: center;
+            border: 3px solid;
+        }
+
+        .dark-mode .turn-indicator {
+            background: var(--cell-bg-dark);
+            box-shadow: 0 3px 6px var(--shadow-dark);
+        }
+
+        .turnX {
+            color: var(--secondary-light);
+            border-color: var(--secondary-light);
+            animation: pulseX 1.5s infinite;
+        }
+
+        .turnO {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            animation: pulseO 1.5s infinite;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: var(--cell-bg-light);
+            box-shadow: 0 3px 6px var(--shadow-light);
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .dark-mode .score-board {
+            background: var(--cell-bg-dark);
+            box-shadow: 0 3px 6px var(--shadow-dark);
+        }
+
+        .score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+        }
+
+        .scoreX {
+            color: var(--secondary-light);
+            font-weight: bold;
+        }
+
+        .scoreO {
+            color: var(--primary-light);
+            font-weight: bold;
+        }
+
+        #gameContainer {
+            width: 100%;
+            max-width: calc(min(10vw, 60px) * 10 + 20px);
+            overflow: auto;
+            margin-bottom: 25px;
+            background: var(--cell-bg-light);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 20px var(--shadow-light);
+        }
+
+        .dark-mode #gameContainer {
+            background: var(--cell-bg-dark);
+            box-shadow: 0 5px 20px var(--shadow-dark);
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        td {
+            width: min(10vw, 60px);
+            height: min(10vw, 60px);
+            text-align: center;
+            vertical-align: middle;
+            font-size: calc(min(10vw, 60px) * 0.6);
+            font-weight: bold;
+            border: 2px solid var(--border-light);
+            cursor: pointer;
+            background: var(--cell-bg-light);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .dark-mode td {
+            border-color: var(--border-dark);
+            background: var(--cell-bg-dark);
+        }
+
+        td:hover {
+            transform: scale(1.05);
+            z-index: 1;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .red-bg {
+            background: rgba(231, 76, 60, 0.3) !important;
+            color: var(--secondary-light) !important;
+            animation: celebrate 0.5s ease;
+        }
+
+        .blue-bg {
+            background: rgba(52, 152, 219, 0.3) !important;
+            color: var(--primary-light) !important;
+            animation: celebrate 0.5s ease;
+        }
+
+        .selected-letter {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 4px var(--accent-light);
+        }
+
+        .dark-mode .selected-letter {
+            box-shadow: 0 0 0 4px var(--accent-dark);
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--cell-bg-light);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px var(--shadow-light);
+            z-index: 100;
+            text-align: center;
+            display: none;
+            max-width: 90%;
+            width: 400px;
+            border: 3px solid var(--accent-light);
+        }
+
+        .dark-mode .message {
+            background: var(--cell-bg-dark);
+            box-shadow: 0 10px 25px var(--shadow-dark);
+            border-color: var(--accent-dark);
+        }
+
+        .message h2 {
+            margin-bottom: 15px;
+            color: var(--accent-light);
+            font-size: 24px;
+        }
+
+        .dark-mode .message h2 {
+            color: var(--accent-dark);
+        }
+
+        .message p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .message button {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent-dark));
+            color: white;
+            padding: 12px 25px;
+            font-size: 16px;
+        }
+
+        @keyframes pulseX {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        @keyframes pulseO {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-info {
+                flex-direction: column;
+            }
+            
+            .letter-buttons {
+                justify-content: center;
+            }
+
+            h1 {
+                padding-right: 40px;
+            }
+
+            .theme-toggle {
+                right: -100px;
+                top:-20px;
+            }
+        
+        }
+        .home{
+         text-decoration: none;color:white;background-color: royalblue;border-radius:50%;padding:5px; height:50px;width:50px; position:absolute;top:-10px;
+right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 101;
+        }
+    </style>
+</head>
+<body>
+  
+    <h1>SOS Game
+        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+        <div><a href="index.html" class="home">&#8962;</a></div>
+    </h1>
+    
+    <div class="game-header">
+        <div class="controls">
+            <div class="control-group">
+                <label for="gridSize">Grid Size:</label>
+                <input type="number" id="gridSize" value="5" min="3" max="10">
+            </div>
+            <button id="startBtn" onclick="startGame()">Start Game</button>
+        </div>
+        
+        <div class="letter-buttons">
+            <button id="btnS" class="letter-btn">S</button>
+            <button id="btnO" class="letter-btn">O</button>
+        </div>
+    </div>
+    
+    <div class="game-info">
+        <div id="turnIndicator" class="turn-indicator turnX">Player X's Turn</div>
+        <div class="score-board">
+            <div class="score scoreX">X: <span id="scoreX">0</span></div>
+            <div class="score scoreO">O: <span id="scoreO">0</span></div>
+        </div>
+    </div>
+    
+    <div id="gameContainer"></div>
+    <button id="reset" onclick="startGame()">Reset Game</button>
+    
+    <div id="messageBox" class="message">
+        <h2 id="messageText">Game Over!</h2>
+        <p id="messageSubtext"></p>
+        <button onclick="hideMessage()">Continue</button>
+    </div>
+
+    <script>
+        let grid = [];
+        let gridSize = 5;
+        let currentPlayer = 'X';
+        let selectedLetter = '';
+        let score = { X: 0, O: 0 };
+        let gameActive = true;
+        let darkMode = false;
+
+        function toggleTheme() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode', darkMode);
+            localStorage.setItem('darkMode', darkMode);
+            
+            // Update button icons
+            const themeBtn = document.querySelector('.theme-toggle');
+            themeBtn.textContent = darkMode ? '🌞' : '🌓';
+        }
+
+        function startGame() {
+            gridSize = parseInt(document.getElementById("gridSize").value);
+            if (gridSize < 3 || gridSize > 10 || isNaN(gridSize)) {
+                showMessage("Invalid Grid Size", "Please enter a grid size between 3 and 10");
+                return;
+            }
+            
+            grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+            score = { X: 0, O: 0 };
+            updateScore();
+            renderGrid();
+            currentPlayer = 'X';
+            updateTurnIndicator();
+            gameActive = true;
+            hideMessage();
+            
+            // Reset letter selection
+            selectedLetter = '';
+            document.getElementById('btnS').classList.remove('selected-letter');
+            document.getElementById('btnO').classList.remove('selected-letter');
+        }
+
+        function updateTurnIndicator() {
+            let turnText = document.getElementById("turnIndicator");
+            if (currentPlayer === 'X') {
+                turnText.innerText = "Player X's Turn";
+                turnText.className = "turn-indicator turnX";
+            } else {
+                turnText.innerText = "Player O's Turn";
+                turnText.className = "turn-indicator turnO";
+            }
+        }
+
+        function updateScore() {
+            document.getElementById("scoreX").innerText = score.X;
+            document.getElementById("scoreO").innerText = score.O;
+        }
+
+        function renderGrid() {
+            let gameContainer = document.getElementById("gameContainer");
+            gameContainer.innerHTML = "";
+            let table = document.createElement("table");
+            
+            for (let i = 0; i < gridSize; i++) {
+                let row = document.createElement("tr");
+                for (let j = 0; j < gridSize; j++) {
+                    let cell = document.createElement("td");
+                    cell.id = `cell-${i}-${j}`;
+                    cell.addEventListener("click", () => placeLetter(i, j));
+                    
+                    if (grid[i][j] !== '') {
+                        cell.innerText = grid[i][j].letter;
+                        cell.style.color = (grid[i][j].player === 'X') ? 
+                            (darkMode ? 'var(--secondary-light)' : 'var(--secondary-dark)') : 
+                            (darkMode ? 'var(--primary-light)' : 'var(--primary-dark)');
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            
+            gameContainer.appendChild(table);
+        }
+
+        function placeLetter(row, col) {
+            if (!gameActive) return;
+            if (!selectedLetter) {
+                showMessage("Select a Letter", "Please select 'S' or 'O' before placing on the grid");
+                return;
+            }
+
+            if (grid[row][col] !== '') return;
+
+            // Place the letter with animation
+            const cell = document.getElementById(`cell-${row}-${col}`);
+            cell.style.transform = 'scale(0)';
+            setTimeout(() => {
+                grid[row][col] = { letter: selectedLetter, player: currentPlayer };
+                cell.innerText = selectedLetter;
+                cell.style.color = (currentPlayer === 'X') ? 
+                    (darkMode ? 'var(--secondary-light)' : 'var(--secondary-dark)') : 
+                    (darkMode ? 'var(--primary-light)' : 'var(--primary-dark)');
+                cell.style.transform = 'scale(1)';
+            }, 150);
+            
+            // Check for SOS sequences after a slight delay
+            setTimeout(() => {
+                let formedSOS = checkSOS(row, col);
+                if (formedSOS && formedSOS.length > 0) {
+                    score[currentPlayer] += formedSOS.length;
+                    colorSOS(formedSOS);
+                    updateScore();
+                    showMessage("SOS Formed!", `Player ${currentPlayer} scored ${formedSOS.length} point(s)!`);
+                } else {
+                    currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+                    updateTurnIndicator();
+                }
+                
+                if (isBoardFull()) {
+                    endGame();
+                    return;
+                }
+                
+                selectedLetter = '';
+                document.getElementById('btnS').classList.remove('selected-letter');
+                document.getElementById('btnO').classList.remove('selected-letter');
+            }, 200);
+        }
+
+        function checkSOS(row, col) {
+            let directions = [
+                { dr: -1, dc: 0 }, { dr: 1, dc: 0 },
+                { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
+                { dr: -1, dc: -1 }, { dr: 1, dc: 1 },
+                { dr: -1, dc: 1 }, { dr: 1, dc: -1 }
+            ];
+
+            let sosSequences = [];
+            let placedLetter = grid[row][col].letter;
+
+            for (let { dr, dc } of directions) {
+                if (placedLetter === 'O') {
+                    let r1 = row - dr, c1 = col - dc;
+                    let r2 = row + dr, c2 = col + dc;
+
+                    if (isValid(r1, c1) && isValid(r2, c2)) {
+                        if (grid[r1][c1] !== '' && grid[r2][c2] !== '' &&
+                            grid[r1][c1].letter === 'S' && grid[r2][c2].letter === 'S') {
+                            sosSequences.push([[r1, c1], [row, col], [r2, c2]]);
+                        }
+                    }
+                } else if (placedLetter === 'S') {
+                    let r2 = row + dr, c2 = col + dc;
+                    let r3 = row + 2*dr, c3 = col + 2*dc;
+                    
+                    if (isValid(r2, c2) && isValid(r3, c3)) {
+                        if (grid[r2][c2] !== '' && grid[r3][c3] !== '' &&
+                            grid[r2][c2].letter === 'O' && grid[r3][c3].letter === 'S') {
+                            sosSequences.push([[row, col], [r2, c2], [r3, c3]]);
+                        }
+                    }
+                    
+                    let r_1 = row - dr, c_1 = col - dc;
+                    let r_2 = row - 2*dr, c_2 = col - 2*dc;
+                    
+                    if (isValid(r_1, c_1) && isValid(r_2, c_2)) {
+                        if (grid[r_1][c_1] !== '' && grid[r_2][c_2] !== '' &&
+                            grid[r_1][c_1].letter === 'O' && grid[r_2][c_2].letter === 'S') {
+                            sosSequences.push([[r_2, c_2], [r_1, c_1], [row, col]]);
+                        }
+                    }
+                }
+            }
+
+            return sosSequences.length ? sosSequences : null;
+        }
+
+        function colorSOS(sequences) {
+            for (let sequence of sequences) {
+                for (let [r, c] of sequence) {
+                    let cell = document.getElementById(`cell-${r}-${c}`);
+                    cell.classList.add(currentPlayer === 'X' ? "red-bg" : "blue-bg");
+                    
+                    // Add sparkle effect
+                    const sparkle = document.createElement('div');
+                    sparkle.style.position = 'absolute';
+                    sparkle.style.width = '100%';
+                    sparkle.style.height = '100%';
+                    sparkle.style.top = '0';
+                    sparkle.style.left = '0';
+                    sparkle.style.background = 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)';
+                    sparkle.style.opacity = '0';
+                    sparkle.style.animation = 'sparkle 1s forwards';
+                    cell.appendChild(sparkle);
+                    
+                    setTimeout(() => {
+                        cell.removeChild(sparkle);
+                    }, 1000);
+                }
+            }
+        }
+
+        function isValid(r, c) {
+            return r >= 0 && r < gridSize && c >= 0 && c < gridSize;
+        }
+        
+        function isBoardFull() {
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === '') return false;
+                }
+            }
+            return true;
+        }
+        
+        function endGame() {
+            gameActive = false;
+            let winner = '';
+            if (score.X > score.O) {
+                winner = 'Player X wins! 🎉';
+            } else if (score.O > score.X) {
+                winner = 'Player O wins! 🎉';
+            } else {
+                winner = "It's a tie! 🤝";
+            }
+            
+            showMessage("Game Over", `${winner}<br><br>Final Score:<br>X - ${score.X} | O - ${score.O}`);
+        }
+        
+        function showMessage(title, text) {
+            document.getElementById('messageText').innerHTML = title;
+            document.getElementById('messageSubtext').innerHTML = text;
+            document.getElementById('messageBox').style.display = 'block';
+            
+            // Add animation
+            const messageBox = document.getElementById('messageBox');
+            messageBox.style.animation = 'none';
+            void messageBox.offsetWidth; // Trigger reflow
+            messageBox.style.animation = 'popIn 0.3s ease-out forwards';
+        }
+        
+        function hideMessage() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.style.animation = 'popOut 0.3s ease-in forwards';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+                messageBox.style.animation = '';
+            }, 300);
+        }
+
+        // Initialize game
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load theme preference
+            darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                document.querySelector('.theme-toggle').textContent = '🌞';
+            }
+            
+            startGame();
+            
+            // Add dynamic styles for animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes popIn {
+                    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                    80% { transform: translate(-50%, -50%) scale(1.05); }
+                    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                }
+                @keyframes popOut {
+                    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                    100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                }
+                @keyframes sparkle {
+                    0% { opacity: 0; transform: scale(0.5); }
+                    50% { opacity: 1; transform: scale(1.2); }
+                    100% { opacity: 0; transform: scale(1.5); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
+        // Event listeners for letter buttons
+        document.getElementById("btnS").addEventListener("click", () => {
+            if (!gameActive) return;
+            selectedLetter = "S";
+            document.getElementById('btnS').classList.add('selected-letter');
+            document.getElementById('btnO').classList.remove('selected-letter');
+            
+            // Add click animation
+            const btn = document.getElementById('btnS');
+            btn.style.animation = 'none';
+            void btn.offsetWidth;
+            btn.style.animation = 'celebrate 0.3s ease';
+        });
+
+        document.getElementById("btnO").addEventListener("click", () => {
+            if (!gameActive) return;
+            selectedLetter = "O";
+            document.getElementById('btnO').classList.add('selected-letter');
+            document.getElementById('btnS').classList.remove('selected-letter');
+            
+            // Add click animation
+            const btn = document.getElementById('btnO');
+            btn.style.animation = 'none';
+            void btn.offsetWidth;
+            btn.style.animation = 'celebrate 0.3s ease';
+        });
+    </script>
+</body>
+</html>
