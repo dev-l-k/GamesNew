@@ -88,7 +88,7 @@
       position: absolute;
       bottom: -5px;
       left: 55px;
-      width: 50px;
+      width: 100px;
       height: 3px;
       background: var(--primary-color);
       border-radius: 3px;
@@ -100,6 +100,7 @@
       font-family: 'Courier New', monospace;
       margin: 10px 0;
       font-weight: 300;
+      font-size: 15px;
     }
 
     /* Main Container */
@@ -859,6 +860,43 @@
         scroll-padding-top: 40px;
       }
     }
+    .random-game-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  margin: 20px auto;
+}
+
+.random-game-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+
+.random-game-btn:active {
+  transform: translateY(1px);
+}
+
+.dice-icon {
+  font-size: 20px;
+  animation: shake 0.5s infinite alternate;
+}
+
+@keyframes shake {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(10deg); }
+}
   </style>
 </head>
 
@@ -907,6 +945,9 @@
       <a href="#Drawing"><i class="fa">🎨</i> Drawing</a>
       <a href="#Firework"><i class="fa">🎆</i> Firework</a>
       <a href="#Converter"><i class="fa">📏</i> Unit Converter</a>
+      <a href="#OddOrEven"><i class="fa">🔟</i>Odd Or Even</a>
+      <a href="#SOS"><i class="fa">🔢</i>SOS</a>
+      <a href="#BMI"><i class="fa">🧑‍🦰</i>BMI Calculator</a>
     </div>
     
     <div class="nav-footer">
@@ -921,7 +962,9 @@
   
   <h4>This webpage is a storage of games and webpages made by dev-l-k.</h4>
   <h4>These games are purely made with HTML, CSS, and JS.</h4>
-
+<button id="randomGameBtn" class="random-game-btn">
+  <span class="dice-icon">🎲</span> Random Game
+</button>
   <!-- Favorites Section -->
   <div class="favorites-section" id="favorites-section">
     <h2><i class="fa">★</i> Your Favorite Games</h2>
@@ -1332,6 +1375,70 @@
         </button>
       </div>
     </div>
+    
+    <div class="game-card">
+      <a href="oore.html" class="box" id="OddOrEven" data-title="Odd or Even Game">
+        <h3>Odd Or Even</h3>
+        <img src="image/oore.jpg" alt="App logo">
+        <h5>Click inside this box to open the Odd or Even Game.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('Odd or Even Game', event)">
+          <div class="share-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>Share</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="game-card">
+      <a href="sos.html" class="box" id="SOS" data-title="SOS Game">
+        <h3>SOS Game</h3>
+        <img src="image/sos.jpg" alt="App logo">
+        <h5>Click inside this box to open the SOS Game.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('SOS Game', event)">
+          <div class="share-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>Share</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="game-card">
+      <a href="bmi.html" class="box" id="BMI" data-title="BMI Calculator app">
+        <h3>BMI Calculator App</h3>
+        <img src="image/bmi.jpg" alt="App logo">
+        <h5>Click inside this box to open the BMI Calculator App.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('BMI Calculator', event)">
+          <div class="share-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>Share</span>
+        </button>
+      </div>
+    </div>
+    
   </div>
 
   <footer>
@@ -1602,6 +1709,39 @@ const matches = title.includes(searchTerm) || description.includes(searchTerm);
                           document.querySelectorAll('#games-container .game-card[style*="flex"]').length;
       document.getElementById('game-counter').textContent = visibleGames;
     }
+    // Random Game Button Functionality
+document.getElementById('randomGameBtn')?.addEventListener('click', () => {
+  const gameCards = document.querySelectorAll('.game-card a.box'); // Targets all game links
+  
+  if (gameCards.length === 0) {
+    alert('No games found!');
+    return;
+  }
+
+  // Pick a random game
+  const randomIndex = Math.floor(Math.random() * gameCards.length);
+  const randomGame = gameCards[randomIndex];
+
+  // Optional: Visual feedback (pulse animation)
+  randomGame.style.animation = 'pulse 0.5s';
+  setTimeout(() => {
+    randomGame.style.animation = '';
+  }, 500);
+
+  // Redirect after a slight delay for animation
+  setTimeout(() => {
+    window.location.href = randomGame.getAttribute('href');
+  }, 300);
+});
+
+// Add this to your CSS if you want the pulse effect
+/*
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+*/
 
     // Initial game counter update
     updateGameCounter();
