@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symbolic Cipher Translator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin: 0 0 20px;
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .textarea-container {
+            position: relative;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 16px;
+            resize: vertical;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #fd79a8;
+            box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.3);
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #encodeBtn { background: #6c5ce7; }
+        #decodeBtn { background: #00b894; }
+        #swapBtn { background: #fdcb6e; color: #2d3436; }
+        #clearBtn { background: #e17055; }
+        
+        #copyBtn {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            padding: 5px 10px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        #copyBtn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .watermark {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .copied-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            animation: fadeOut 2s forwards;
+            animation-delay: 1s;
+            opacity: 0;
+            z-index: 1000;
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            textarea {
+                min-height: 100px;
+                padding: 12px;
+            }
+            
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Desktop-specific styles */
+        @media (min-width: 601px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .textarea-container {
+                margin-bottom: 20px;
+            }
+            
+            textarea {
+                min-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+ <div><a href="index.html" style="text-decoration: none;color:black;background-color: lightpink;border-radius:50%;padding:5px; height:40px;width:40px; position:fixed;top:20px;left:20px; text-align: center;vertical-align: center;font-size: 25px;z-index: 101;">&#8962;</a></div>
+    <div class="container">
+        <h1>Symbolic Cipher Translator</h1>
+        
+        <div class="textarea-container">
+            <textarea id="inputText" placeholder="Type your message here..."></textarea>
+        </div>
+        
+        <div class="buttons">
+            <button id="encodeBtn">Encode</button>
+            <button id="decodeBtn">Decode</button>
+            <button id="swapBtn">Swap</button>
+            <button id="clearBtn">Clear</button>
+        </div>
+        
+        <div class="textarea-container">
+            <textarea id="outputText" placeholder="Your cipher will appear here..." readonly></textarea>
+            <button id="copyBtn"
+>
+    COPY
+</button>
+        </div>
+        
+        <div class="watermark">
+            Transform text into beautiful symbols
+        </div>
+    </div>
+
+    <div id="copiedMessage" class="copied-message" style="display: none;">Copied to clipboard!</div>
+
+    <script>
+        // Symbol mapping
+        const symbolMap = {
+            'a': 'α', 'b': 'β', 'c': 'ψ', 'd': 'δ', 'e': 'ε',
+            'f': 'φ', 'g': 'γ', 'h': 'η', 'i': 'ι', 'j': 'ξ',
+            'k': 'κ', 'l': 'λ', 'm': 'μ', 'n': 'ν', 'o': 'ω',
+            'p': 'π', 'q': 'θ', 'r': 'ρ', 's': 'σ', 't': 'τ',
+            'u': 'υ', 'v': 'ϑ', 'w': 'ώ', 'x': 'χ', 'y': 'ύ',
+            'z': 'ζ', ' ': '☯', '1': '❶', '2': '❷', '3': '❸',
+            '4': '❹', '5': '❺', '6': '❻', '7': '❼', '8': '❽',
+            '9': '❾', '0': '⓿', '.': '⊙', ',': '⋄', '!': '⚡',
+            '?': '⁇', "'": '⸴', '"': '«»', ':': '∶', ';': '⁏',
+            '(': '⦅', ')': '⦆', '/': '⧸', '\\': '⧹', '@': '⨀',
+            '#': '⌗', '$': 'ⓢ', '%': '﹪', '&': '⅋'
+        };
+
+        // Reverse mapping for decoding
+        const reverseSymbolMap = {};
+        for (const key in symbolMap) {
+            reverseSymbolMap[symbolMap[key]] = key;
+        }
+
+        // DOM elements
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const encodeBtn = document.getElementById('encodeBtn');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const copiedMessage = document.getElementById('copiedMessage');
+
+        // Encode function
+        function encode(text) {
+            return text.toLowerCase().split('').map(char => {
+                return symbolMap[char] || char;
+            }).join('');
+        }
+
+        // Decode function
+        function decode(text) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                result += reverseSymbolMap[char] || char;
+            }
+            return result;
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard() {
+            outputText.select();
+            document.execCommand('copy');
+            
+            // Show copied message
+            copiedMessage.style.display = 'block';
+            copiedMessage.style.opacity = '1';
+            
+            // Reset animation
+            setTimeout(() => {
+                copiedMessage.style.display = 'none';
+                copiedMessage.style.animation = 'none';
+                void copiedMessage.offsetWidth; // Trigger reflow
+                copiedMessage.style.animation = 'fadeOut 2s forwards';
+                copiedMessage.style.animationDelay = '1s';
+            }, 10);
+        }
+
+        // Button click handlers
+        encodeBtn.onclick = () => {
+            outputText.value = encode(inputText.value);
+            encodeBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => encodeBtn.style.transform = '', 100);
+        };
+
+        decodeBtn.onclick = () => {
+            outputText.value = decode(inputText.value);
+            decodeBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => decodeBtn.style.transform = '', 100);
+        };
+
+        swapBtn.onclick = () => {
+            const temp = inputText.value;
+            inputText.value = outputText.value;
+            outputText.value = temp;
+            swapBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => swapBtn.style.transform = '', 100);
+        };
+
+        clearBtn.onclick = () => {
+            inputText.value = '';
+            outputText.value = '';
+            clearBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => clearBtn.style.transform = '', 100);
+        };
+
+        copyBtn.onclick = copyToClipboard;
+
+        // Initialize with example
+        window.onload = () => {
+            inputText.value = "Hello, World!";
+            outputText.value = encode(inputText.value);
+        };
+    </script>
+</body>
+</html>
