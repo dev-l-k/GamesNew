@@ -897,6 +897,9 @@
   0% { transform: rotate(-10deg); }
   100% { transform: rotate(10deg); }
 }
+img{
+ transition: opacity 0.2s ease;
+}
   </style>
 </head>
 
@@ -980,7 +983,7 @@
     <div class="game-card">
       <a href="ttt.html" class="box" id="ttt" data-title="unbeatable tic tac toe">
         <h3>UNBEATABLE TIC TAC TOE</h3>
-        <img src="image/ttt.jpg" alt="Tic Tac Toe Game">
+        <img src="image/ttt.jpg" alt="Tic Tac Toe Game" onmouseover="this.src='image/ttt-preview.gif'" onmouseout="this.src='image/ttt.jpg'">
         <h5>Click inside this box to open the Tic Tac Toe Game.</h5>
       </a>
       <div class="card-actions">
@@ -1437,6 +1440,29 @@
           <span>Share</span>
         </button>
       </div>
+      
+    </div>
+    
+     <div class="game-card">
+      <a href="text.html" class="box" id="Symbolic Text Translator" data-title="Symbolic Text Translator">
+        <h3>Symbolic Text Translator App</h3>
+        <img src="image/text.jpg" alt="App logo">
+        <h5>Click inside this box to open the Code Generator App.</h5>
+      </a>
+      <div class="card-actions">
+        <button class="favorite-btn" aria-label="Add to favorites">★</button>
+        <button class="share-btn" onclick="shareGame('Symbolic Text Translator', event)">
+          <div class="share-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>Share</span>
+        </button>
+      </div>
+      
     </div>
     
   </div>
@@ -1745,6 +1771,36 @@ document.getElementById('randomGameBtn')?.addEventListener('click', () => {
 
     // Initial game counter update
     updateGameCounter();
+    
+    document.addEventListener('DOMContentLoaded', () => {
+  const images = document.querySelectorAll('img');
+
+  images.forEach(img => {
+    const src = img.getAttribute('src');
+    if (!src || !src.startsWith('image/') || !src.endsWith('.jpg')) return;
+
+    const gifSrc = src.replace(/(image\/)(.*)\.jpg$/, '$1$2-preview.gif');
+    const originalSrc = src;
+
+    img.style.transition = 'opacity 0.3s ease';
+
+    img.addEventListener('mouseenter', () => {
+      img.style.opacity = '0';
+      setTimeout(() => {
+        img.src = gifSrc;
+        img.style.opacity = '1';
+      }, 300);
+    });
+
+    img.addEventListener('mouseleave', () => {
+      img.style.opacity = '0';
+      setTimeout(() => {
+        img.src = originalSrc;
+        img.style.opacity = '1';
+      }, 300);
+    });
+  });
+});
   </script>
 </body>
 </html>
