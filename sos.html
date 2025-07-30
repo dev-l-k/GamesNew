@@ -58,7 +58,7 @@
             position: absolute;
             top:-10px;
             right:-200px;
-           
+
             background: none;
             border: none;
             font-size: 24px;
@@ -115,6 +115,21 @@
         }
 
         .dark-mode input[type="number"] {
+            border-color: var(--border-dark);
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        select {
+            padding: 10px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-weight: bold;
+            background: var(--cell-bg-light);
+            color: var(--text-light);
+        }
+
+        .dark-mode select {
             border-color: var(--border-dark);
             background: var(--bg-dark);
             color: var(--text-dark);
@@ -396,11 +411,11 @@
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .game-info {
                 flex-direction: column;
             }
-            
+
             .letter-buttons {
                 justify-content: center;
             }
@@ -413,7 +428,7 @@
                 right: -100px;
                 top:-20px;
             }
-        
+
         }
         .home{
          text-decoration: none;color:white;background-color: royalblue;border-radius:50%;padding:5px; height:50px;width:50px; position:absolute;top:-10px;
@@ -422,27 +437,34 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
     </style>
 </head>
 <body>
-  
+
     <h1>SOS Game
         <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
         <div><a href="index.html" class="home">&#8962;</a></div>
     </h1>
-    
+
     <div class="game-header">
         <div class="controls">
             <div class="control-group">
                 <label for="gridSize">Grid Size:</label>
                 <input type="number" id="gridSize" value="5" min="3" max="10">
             </div>
+            <div class="control-group">
+                <label for="gameMode">Game Mode:</label>
+                <select id="gameMode">
+                    <option value="human">Human vs Human</option>
+                    <option value="ai">Human vs AI</option>
+                </select>
+            </div>
             <button id="startBtn" onclick="startGame()">Start Game</button>
         </div>
-        
+
         <div class="letter-buttons">
             <button id="btnS" class="letter-btn">S</button>
             <button id="btnO" class="letter-btn">O</button>
         </div>
     </div>
-    
+
     <div class="game-info">
         <div id="turnIndicator" class="turn-indicator turnX">Player X's Turn</div>
         <div class="score-board">
@@ -450,10 +472,10 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
             <div class="score scoreO">O: <span id="scoreO">0</span></div>
         </div>
     </div>
-    
+
     <div id="gameContainer"></div>
     <button id="reset" onclick="startGame()">Reset Game</button>
-    
+
     <div id="messageBox" class="message">
         <h2 id="messageText">Game Over!</h2>
         <p id="messageSubtext"></p>
@@ -468,12 +490,14 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
         let score = { X: 0, O: 0 };
         let gameActive = true;
         let darkMode = false;
+        let gameMode = 'human';
+        let aiThinking = false;
 
         function toggleTheme() {
             darkMode = !darkMode;
             document.body.classList.toggle('dark-mode', darkMode);
             localStorage.setItem('darkMode', darkMode);
-            
+
             // Update button icons
             const themeBtn = document.querySelector('.theme-toggle');
             themeBtn.textContent = darkMode ? '🌞' : '🌓';
@@ -481,11 +505,13 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
 
         function startGame() {
             gridSize = parseInt(document.getElementById("gridSize").value);
+            gameMode = document.getElementById("gameMode").value;
+            
             if (gridSize < 3 || gridSize > 10 || isNaN(gridSize)) {
                 showMessage("Invalid Grid Size", "Please enter a grid size between 3 and 10");
                 return;
             }
-            
+
             grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
             score = { X: 0, O: 0 };
             updateScore();
@@ -493,21 +519,27 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
             currentPlayer = 'X';
             updateTurnIndicator();
             gameActive = true;
+            aiThinking = false;
             hideMessage();
-            
+
             // Reset letter selection
             selectedLetter = '';
             document.getElementById('btnS').classList.remove('selected-letter');
             document.getElementById('btnO').classList.remove('selected-letter');
+
+            // If AI is O and it's their turn, make a move
+            if (gameMode === 'ai' && currentPlayer === 'O') {
+                makeAIMove();
+            }
         }
 
         function updateTurnIndicator() {
             let turnText = document.getElementById("turnIndicator");
             if (currentPlayer === 'X') {
-                turnText.innerText = "Player X's Turn";
+                turnText.innerText = gameMode === 'ai' ? "Your Turn" : "Player X's Turn";
                 turnText.className = "turn-indicator turnX";
             } else {
-                turnText.innerText = "Player O's Turn";
+                turnText.innerText = gameMode === 'ai' ? "AI's Turn" : "Player O's Turn";
                 turnText.className = "turn-indicator turnO";
             }
         }
@@ -521,72 +553,309 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
             let gameContainer = document.getElementById("gameContainer");
             gameContainer.innerHTML = "";
             let table = document.createElement("table");
-            
+
             for (let i = 0; i < gridSize; i++) {
                 let row = document.createElement("tr");
                 for (let j = 0; j < gridSize; j++) {
                     let cell = document.createElement("td");
                     cell.id = `cell-${i}-${j}`;
                     cell.addEventListener("click", () => placeLetter(i, j));
-                    
+
                     if (grid[i][j] !== '') {
                         cell.innerText = grid[i][j].letter;
                         cell.style.color = (grid[i][j].player === 'X') ? 
                             (darkMode ? 'var(--secondary-light)' : 'var(--secondary-dark)') : 
                             (darkMode ? 'var(--primary-light)' : 'var(--primary-dark)');
                     }
-                    
+
                     row.appendChild(cell);
                 }
                 table.appendChild(row);
             }
-            
+
             gameContainer.appendChild(table);
         }
 
         function placeLetter(row, col) {
-            if (!gameActive) return;
-            if (!selectedLetter) {
-                showMessage("Select a Letter", "Please select 'S' or 'O' before placing on the grid");
-                return;
-            }
+    if (!gameActive || aiThinking) return;
+    if (gameMode === 'ai' && currentPlayer === 'O') return;
+    
+    if (!selectedLetter) {
+        showMessage("Select a Letter", "Please select 'S' or 'O' before placing on the grid");
+        return;
+    }
 
-            if (grid[row][col] !== '') return;
+    if (grid[row][col] !== '') return;
 
-            // Place the letter with animation
-            const cell = document.getElementById(`cell-${row}-${col}`);
-            cell.style.transform = 'scale(0)';
-            setTimeout(() => {
-                grid[row][col] = { letter: selectedLetter, player: currentPlayer };
-                cell.innerText = selectedLetter;
-                cell.style.color = (currentPlayer === 'X') ? 
-                    (darkMode ? 'var(--secondary-light)' : 'var(--secondary-dark)') : 
-                    (darkMode ? 'var(--primary-light)' : 'var(--primary-dark)');
-                cell.style.transform = 'scale(1)';
-            }, 150);
-            
-            // Check for SOS sequences after a slight delay
-            setTimeout(() => {
-                let formedSOS = checkSOS(row, col);
-                if (formedSOS && formedSOS.length > 0) {
-                    score[currentPlayer] += formedSOS.length;
-                    colorSOS(formedSOS);
-                    updateScore();
-                    showMessage("SOS Formed!", `Player ${currentPlayer} scored ${formedSOS.length} point(s)!`);
-                } else {
-                    currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
-                    updateTurnIndicator();
-                }
-                
-                if (isBoardFull()) {
-                    endGame();
+    // Place the letter with animation
+    const cell = document.getElementById(`cell-${row}-${col}`);
+    cell.style.transform = 'scale(0)';
+    setTimeout(() => {
+        grid[row][col] = { letter: selectedLetter, player: currentPlayer };
+        cell.innerText = selectedLetter;
+        cell.style.color = (currentPlayer === 'X') ? 
+            (darkMode ? 'var(--secondary-light)' : 'var(--secondary-dark)') : 
+            (darkMode ? 'var(--primary-light)' : 'var(--primary-dark)');
+        cell.style.transform = 'scale(1)';
+    }, 150);
+
+    // Check for SOS sequences after a slight delay
+    setTimeout(() => {
+        let formedSOS = checkSOS(row, col);
+        let scored = false;
+        
+        if (formedSOS?.length > 0) {
+            score[currentPlayer] += formedSOS.length;
+            scored = true;
+            colorSOS(formedSOS);
+            updateScore();
+        }
+
+        if (isBoardFull()) {
+            endGame();
+            return;
+        }
+
+        // Only switch players if no SOS was formed
+        if (!scored) {
+            currentPlayer = 'O';
+            updateTurnIndicator();
+        }
+
+        selectedLetter = '';
+        document.getElementById('btnS').classList.remove('selected-letter');
+        document.getElementById('btnO').classList.remove('selected-letter');
+
+        // If playing against AI and it's their turn, make a move
+        if (gameMode === 'ai' && currentPlayer === 'O' && gameActive) {
+            setTimeout(makeAIMove, 800);
+        }
+    }, 200);
+}
+
+        function makeAIMove() {
+    if (!gameActive) return;
+    
+    aiThinking = true;
+    document.getElementById("turnIndicator").innerText = "AI is thinking...";
+    
+    setTimeout(() => {
+        const emptyCells = getEmptyCells();
+        if (emptyCells.length === 0) {
+            aiThinking = false;
+            return;
+        }
+
+        // Try to find a winning move (create SOS)
+        for (const cell of emptyCells) {
+            for (const letter of ['S', 'O']) {
+                grid[cell.row][cell.col] = {letter, player: 'O'};
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    executeAIMove(cell.row, cell.col, letter);
                     return;
                 }
+                grid[cell.row][cell.col] = '';
+            }
+        }
+
+        // Try to block player's winning move
+        for (const cell of emptyCells) {
+            for (const letter of ['S', 'O']) {
+                grid[cell.row][cell.col] = {letter, player: 'X'};
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    // Block with opposite letter
+                    const blockLetter = letter === 'S' ? 'O' : 'S';
+                    executeAIMove(cell.row, cell.col, blockLetter);
+                    return;
+                }
+                grid[cell.row][cell.col] = '';
+            }
+        }
+
+        // If no winning or blocking moves, make a random move
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        const randomLetter = Math.random() < 0.5 ? 'S' : 'O';
+        executeAIMove(randomCell.row, randomCell.col, randomLetter);
+    }, 500);
+}
+
+        function findBestMove() {
+            // Get all empty cells
+            const emptyCells = [];
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === '') {
+                        emptyCells.push({ row: i, col: j });
+                    }
+                }
+            }
+
+            // If no empty cells, return null
+            if (emptyCells.length === 0) return null;
+
+            // Try to find a winning move (that creates SOS)
+            for (const cell of emptyCells) {
+                // Try placing 'S'
+                grid[cell.row][cell.col] = { letter: 'S', player: 'O' };
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    return { ...cell, letter: 'S' };
+                }
+                grid[cell.row][cell.col] = '';
                 
-                selectedLetter = '';
-                document.getElementById('btnS').classList.remove('selected-letter');
-                document.getElementById('btnO').classList.remove('selected-letter');
-            }, 200);
+                // Try placing 'O'
+                grid[cell.row][cell.col] = { letter: 'O', player: 'O' };
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    return { ...cell, letter: 'O' };
+                }
+                grid[cell.row][cell.col] = '';
+            }
+
+            // Block opponent's potential SOS
+            for (const cell of emptyCells) {
+                // Check if placing 'S' would block opponent
+                grid[cell.row][cell.col] = { letter: 'S', player: 'X' };
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    return { ...cell, letter: 'S' };
+                }
+                grid[cell.row][cell.col] = '';
+                
+                // Check if placing 'O' would block opponent
+                grid[cell.row][cell.col] = { letter: 'O', player: 'X' };
+                if (checkSOS(cell.row, cell.col)?.length > 0) {
+                    grid[cell.row][cell.col] = '';
+                    return { ...cell, letter: 'O' };
+                }
+                grid[cell.row][cell.col] = '';
+            }
+
+            // If no immediate winning or blocking moves, use minimax
+            let bestScore = -Infinity;
+            let bestMove = null;
+            
+            // Try a few possible moves to find the best one
+            for (const cell of emptyCells) {
+                // Try both 'S' and 'O'
+                for (const letter of ['S', 'O']) {
+                    grid[cell.row][cell.col] = { letter, player: 'O' };
+                    
+                    // Check if this move creates SOS
+                    const sosCount = checkSOS(cell.row, cell.col)?.length || 0;
+                    
+                    if (sosCount > 0) {
+                        // If it creates SOS, we get another turn
+                        const score = minimax(0, true, score.X, score.O + sosCount);
+                        grid[cell.row][cell.col] = '';
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { ...cell, letter };
+                        }
+                    } else {
+                        // Regular move
+                        const score = minimax(0, true, score.X, score.O);
+                        grid[cell.row][cell.col] = '';
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { ...cell, letter };
+                        }
+                    }
+                }
+            }
+
+            // If no best move found (shouldn't happen), pick random
+            if (!bestMove && emptyCells.length > 0) {
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                bestMove = { ...randomCell, letter: Math.random() < 0.5 ? 'S' : 'O' };
+            }
+
+            return bestMove;
+        }
+
+        function minimax(depth, isMaximizing, scoreX, scoreO, alpha = -Infinity, beta = Infinity) {
+            // Base case - game over or depth limit reached
+            if (isBoardFull() || depth >= 3) {
+                return scoreO - scoreX; // AI wants to maximize this difference
+            }
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                
+                // Try all possible moves for AI (O)
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        if (grid[i][j] === '') {
+                            // Try both 'S' and 'O'
+                            for (const letter of ['S', 'O']) {
+                                grid[i][j] = { letter, player: 'O' };
+                                
+                                // Check if this move creates SOS
+                                const sosCount = checkSOS(i, j)?.length || 0;
+                                const newScoreO = scoreO + sosCount;
+                                
+                                if (sosCount > 0) {
+                                    // If SOS formed, AI gets another turn
+                                    const score = minimax(depth + 1, true, scoreX, newScoreO, alpha, beta);
+                                    bestScore = Math.max(bestScore, score);
+                                } else {
+                                    // Regular move
+                                    const score = minimax(depth + 1, false, scoreX, newScoreO, alpha, beta);
+                                    bestScore = Math.max(bestScore, score);
+                                }
+                                
+                                grid[i][j] = '';
+                                alpha = Math.max(alpha, bestScore);
+                                if (beta <= alpha) break; // Beta cutoff
+                            }
+                        }
+                        if (beta <= alpha) break;
+                    }
+                    if (beta <= alpha) break;
+                }
+                
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                
+                // Try all possible moves for player (X)
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        if (grid[i][j] === '') {
+                            // Try both 'S' and 'O'
+                            for (const letter of ['S', 'O']) {
+                                grid[i][j] = { letter, player: 'X' };
+                                
+                                // Check if this move creates SOS
+                                const sosCount = checkSOS(i, j)?.length || 0;
+                                const newScoreX = scoreX + sosCount;
+                                
+                                if (sosCount > 0) {
+                                    // If SOS formed, player gets another turn
+                                    const score = minimax(depth + 1, false, newScoreX, scoreO, alpha, beta);
+                                    bestScore = Math.min(bestScore, score);
+                                } else {
+                                    // Regular move
+                                    const score = minimax(depth + 1, true, newScoreX, scoreO, alpha, beta);
+                                    bestScore = Math.min(bestScore, score);
+                                }
+                                
+                                grid[i][j] = '';
+                                beta = Math.min(beta, bestScore);
+                                if (beta <= alpha) break; // Alpha cutoff
+                            }
+                        }
+                        if (beta <= alpha) break;
+                    }
+                    if (beta <= alpha) break;
+                }
+                
+                return bestScore;
+            }
         }
 
         function checkSOS(row, col) {
@@ -614,17 +883,17 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
                 } else if (placedLetter === 'S') {
                     let r2 = row + dr, c2 = col + dc;
                     let r3 = row + 2*dr, c3 = col + 2*dc;
-                    
+
                     if (isValid(r2, c2) && isValid(r3, c3)) {
                         if (grid[r2][c2] !== '' && grid[r3][c3] !== '' &&
                             grid[r2][c2].letter === 'O' && grid[r3][c3].letter === 'S') {
                             sosSequences.push([[row, col], [r2, c2], [r3, c3]]);
                         }
                     }
-                    
+
                     let r_1 = row - dr, c_1 = col - dc;
                     let r_2 = row - 2*dr, c_2 = col - 2*dc;
-                    
+
                     if (isValid(r_1, c_1) && isValid(r_2, c_2)) {
                         if (grid[r_1][c_1] !== '' && grid[r_2][c_2] !== '' &&
                             grid[r_1][c_1].letter === 'O' && grid[r_2][c_2].letter === 'S') {
@@ -642,7 +911,7 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
                 for (let [r, c] of sequence) {
                     let cell = document.getElementById(`cell-${r}-${c}`);
                     cell.classList.add(currentPlayer === 'X' ? "red-bg" : "blue-bg");
-                    
+
                     // Add sparkle effect
                     const sparkle = document.createElement('div');
                     sparkle.style.position = 'absolute';
@@ -654,7 +923,7 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
                     sparkle.style.opacity = '0';
                     sparkle.style.animation = 'sparkle 1s forwards';
                     cell.appendChild(sparkle);
-                    
+
                     setTimeout(() => {
                         cell.removeChild(sparkle);
                     }, 1000);
@@ -665,7 +934,7 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
         function isValid(r, c) {
             return r >= 0 && r < gridSize && c >= 0 && c < gridSize;
         }
-        
+
         function isBoardFull() {
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
@@ -674,33 +943,33 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
             }
             return true;
         }
-        
+
         function endGame() {
             gameActive = false;
             let winner = '';
             if (score.X > score.O) {
-                winner = 'Player X wins! 🎉';
+                winner = gameMode === 'ai' ? 'You win! 🎉' : 'Player X wins! 🎉';
             } else if (score.O > score.X) {
-                winner = 'Player O wins! 🎉';
+                winner = gameMode === 'ai' ? 'AI wins! 🤖' : 'Player O wins! 🎉';
             } else {
                 winner = "It's a tie! 🤝";
             }
-            
+
             showMessage("Game Over", `${winner}<br><br>Final Score:<br>X - ${score.X} | O - ${score.O}`);
         }
-        
+
         function showMessage(title, text) {
             document.getElementById('messageText').innerHTML = title;
             document.getElementById('messageSubtext').innerHTML = text;
             document.getElementById('messageBox').style.display = 'block';
-            
+
             // Add animation
             const messageBox = document.getElementById('messageBox');
             messageBox.style.animation = 'none';
             void messageBox.offsetWidth; // Trigger reflow
             messageBox.style.animation = 'popIn 0.3s ease-out forwards';
         }
-        
+
         function hideMessage() {
             const messageBox = document.getElementById('messageBox');
             messageBox.style.animation = 'popOut 0.3s ease-in forwards';
@@ -718,9 +987,9 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
                 document.body.classList.add('dark-mode');
                 document.querySelector('.theme-toggle').textContent = '🌞';
             }
-            
+
             startGame();
-            
+
             // Add dynamic styles for animations
             const style = document.createElement('style');
             style.textContent = `
@@ -744,11 +1013,13 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
 
         // Event listeners for letter buttons
         document.getElementById("btnS").addEventListener("click", () => {
-            if (!gameActive) return;
+            if (!gameActive || aiThinking) return;
+            if (gameMode === 'ai' && currentPlayer === 'O') return;
+            
             selectedLetter = "S";
             document.getElementById('btnS').classList.add('selected-letter');
             document.getElementById('btnO').classList.remove('selected-letter');
-            
+
             // Add click animation
             const btn = document.getElementById('btnS');
             btn.style.animation = 'none';
@@ -757,17 +1028,64 @@ right:340px;text-align: center;vertical-align: center;font-size: 25px;z-index: 1
         });
 
         document.getElementById("btnO").addEventListener("click", () => {
-            if (!gameActive) return;
+            if (!gameActive || aiThinking) return;
+            if (gameMode === 'ai' && currentPlayer === 'O') return;
+            
             selectedLetter = "O";
             document.getElementById('btnO').classList.add('selected-letter');
             document.getElementById('btnS').classList.remove('selected-letter');
-            
+
             // Add click animation
             const btn = document.getElementById('btnO');
             btn.style.animation = 'none';
             void btn.offsetWidth;
             btn.style.animation = 'celebrate 0.3s ease';
         });
+        
+        function getEmptyCells() {
+    const emptyCells = [];
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (grid[i][j] === '') {
+                emptyCells.push({row: i, col: j});
+            }
+        }
+    }
+    return emptyCells;
+}
+function executeAIMove(row, col, letter) {
+    const cell = document.getElementById(`cell-${row}-${col}`);
+    cell.style.transform = 'scale(0)';
+    
+    setTimeout(() => {
+        grid[row][col] = { letter, player: 'O' };
+        cell.innerText = letter;
+        cell.style.color = darkMode ? 'var(--primary-light)' : 'var(--primary-dark)';
+        cell.style.transform = 'scale(1)';
+        
+        setTimeout(() => {
+            const formedSOS = checkSOS(row, col);
+            if (formedSOS?.length > 0) {
+                score['O'] += formedSOS.length;
+                colorSOS(formedSOS);
+                updateScore();
+                
+                if (isBoardFull()) {
+                    endGame();
+                    aiThinking = false;
+                    return;
+                }
+                
+                // AI gets another turn if SOS formed
+                setTimeout(makeAIMove, 800);
+            } else {
+                currentPlayer = 'X';
+                updateTurnIndicator();
+                aiThinking = false;
+            }
+        }, 200);
+    }, 150);
+}
     </script>
 </body>
 </html>
